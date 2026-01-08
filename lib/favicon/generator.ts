@@ -10,16 +10,15 @@ export interface GeneratedFavicon {
   isIco?: boolean;
 }
 
-export async function cropToSquare(
+export async function fitToSquare(
   imageUrl: string,
   originalWidth: number,
   originalHeight: number
 ): Promise<{ url: string; size: number }> {
   const img = await loadImage(imageUrl);
 
-  const size = Math.min(originalWidth, originalHeight);
-  const offsetX = (originalWidth - size) / 2;
-  const offsetY = (originalHeight - size) / 2;
+  // Use the larger dimension as the target square size
+  const size = Math.max(originalWidth, originalHeight);
 
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -28,7 +27,16 @@ export async function cropToSquare(
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get canvas context');
 
-  ctx.drawImage(img, offsetX, offsetY, size, size, 0, 0, size, size);
+  // Transparent background (PNG supports transparency)
+  ctx.clearRect(0, 0, size, size);
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // Center the image in the square canvas (keep aspect ratio)
+  const offsetX = (size - originalWidth) / 2;
+  const offsetY = (size - originalHeight) / 2;
+  ctx.drawImage(img, offsetX, offsetY, originalWidth, originalHeight);
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {

@@ -9,7 +9,7 @@ import ProgressBar from '@/components/ProgressBar';
 import FaviconPreview from '@/components/favicon/FaviconPreview';
 import CropPreview from '@/components/favicon/CropPreview';
 import { loadImage } from '@/lib/image/resize';
-import { cropToSquare, generateAllFavicons, generateHtmlTags, type GeneratedFavicon } from '@/lib/favicon/generator';
+import { fitToSquare, generateAllFavicons, generateHtmlTags, type GeneratedFavicon } from '@/lib/favicon/generator';
 import { createFaviconZip } from '@/lib/favicon/zip';
 import { FAVICON_SIZES } from '@/lib/favicon/sizes';
 
@@ -59,8 +59,8 @@ export default function FaviconGeneratorPage() {
     setProgress({ current: 0, total: FAVICON_SIZES.length, name: 'Preparing...' });
 
     try {
-      // Crop to square first
-      const { url: squareUrl } = await cropToSquare(
+      // Fit to square first
+      const { url: squareUrl } = await fitToSquare(
         imageInfo.dataUrl,
         imageInfo.originalWidth,
         imageInfo.originalHeight
@@ -248,7 +248,7 @@ export default function FaviconGeneratorPage() {
                 </div>
                 <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
                   {imageInfo.originalWidth} x {imageInfo.originalHeight}px
-                  {!isSquare && ' (will be cropped to square)'}
+                  {!isSquare && ' (will be fitted to square)'}
                 </p>
               </div>
 
