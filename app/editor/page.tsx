@@ -18,6 +18,7 @@ interface StoredImageInfo {
   originalHeight: number;
   size: number;
   type: string;
+  test: string;
 }
 
 export default function EditorPage() {
