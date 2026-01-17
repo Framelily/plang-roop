@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import styled, { keyframes, css } from 'styled-components';
 import ImageQueue from '@/components/ImageQueue';
 import BatchControls from '@/components/BatchControls';
 import ProgressBar from '@/components/ProgressBar';
@@ -11,8 +10,494 @@ import { processBatch } from '@/lib/image/batchProcessor';
 import { createZipFromProcessedImages } from '@/lib/image/zip';
 import { downloadImage } from '@/lib/image/download';
 import { loadImage } from '@/lib/image/resize';
-import { formatFileSize, generateId, getFormatFromMimeType } from '@/lib/utils';
+import { formatFileSize, generateId } from '@/lib/utils';
 import type { ImageFile, BatchOptions, ImageFormat } from '@/lib/types';
+
+// Color Palette
+const colors = {
+  bg: '#0F0F23',
+  bgLight: '#1a1a2e',
+  bgCard: '#16213e',
+  primary: '#A855F7',
+  neonPink: '#FF71CE',
+  neonCyan: '#01CDFE',
+  neonGreen: '#05FFA1',
+  neonYellow: '#FFFB96',
+  text: '#E2E8F0',
+  textMuted: '#94A3B8',
+  border: '#2D3748',
+};
+
+// Keyframe Animations
+const scanline = keyframes`
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+`;
+
+const blink = keyframes`
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+`;
+
+const glowPulse = keyframes`
+  0%, 100% {
+    box-shadow: 0 0 5px ${colors.primary}, 0 0 10px ${colors.primary};
+  }
+  50% {
+    box-shadow: 0 0 10px ${colors.primary}, 0 0 20px ${colors.primary}, 0 0 30px ${colors.neonPink};
+  }
+`;
+
+// Styled Components
+const PageContainer = styled.div`
+  min-height: 100vh;
+  background-color: ${colors.bg};
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+
+  /* CRT Scanline Effect */
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200%;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+    z-index: 1000;
+    animation: ${scanline} 8s linear infinite;
+  }
+
+  &::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 0%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+`;
+
+const Header = styled.header`
+  border-bottom: 3px solid ${colors.border};
+  background-color: ${colors.bgLight};
+  position: relative;
+  z-index: 10;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, ${colors.neonCyan}, ${colors.neonPink}, ${colors.neonGreen});
+  }
+`;
+
+const HeaderContent = styled.div`
+  max-width: 72rem;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem;
+`;
+
+const HeaderLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  @media (min-width: 640px) {
+    gap: 1rem;
+  }
+`;
+
+const BackButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: ${colors.textMuted};
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-terminal);
+  font-size: 1.25rem;
+  transition: all 0.2s;
+  padding: 0.5rem;
+
+  &:hover {
+    color: ${colors.neonCyan};
+    text-shadow: 0 0 10px ${colors.neonCyan};
+  }
+
+  @media (min-width: 640px) {
+    gap: 0.5rem;
+  }
+`;
+
+const BackIcon = styled.svg`
+  width: 1.25rem;
+  height: 1.25rem;
+`;
+
+const BackText = styled.span`
+  display: none;
+
+  @media (min-width: 640px) {
+    display: inline;
+  }
+`;
+
+const Divider = styled.div`
+  display: none;
+  width: 2px;
+  height: 1.5rem;
+  background: ${colors.border};
+
+  @media (min-width: 640px) {
+    display: block;
+  }
+`;
+
+const Title = styled.h1`
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+  color: ${colors.neonPink};
+  text-shadow: 0 0 10px ${colors.neonPink}, 0 0 20px ${colors.neonPink};
+
+  @media (min-width: 640px) {
+    font-size: 1rem;
+  }
+`;
+
+const ImageCount = styled.span`
+  font-family: var(--font-terminal);
+  font-size: 1.25rem;
+  padding: 0.25rem 0.75rem;
+  background: ${colors.bgCard};
+  border: 2px solid ${colors.neonCyan};
+  color: ${colors.neonCyan};
+  box-shadow: 0 0 5px ${colors.neonCyan};
+`;
+
+const HeaderRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  @media (min-width: 640px) {
+    gap: 0.75rem;
+  }
+`;
+
+const PixelButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
+  font-family: var(--font-pixel);
+  font-size: ${props => props.$size === 'sm' ? '0.5rem' : '0.625rem'};
+  padding: ${props => props.$size === 'sm' ? '0.5rem 0.75rem' : '0.75rem 1rem'};
+  border: 3px solid;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.1s;
+  text-transform: uppercase;
+
+  ${props => props.$variant === 'outline' ? css`
+    background: transparent;
+    border-color: ${colors.neonCyan};
+    color: ${colors.neonCyan};
+
+    &:hover:not(:disabled) {
+      background: ${colors.neonCyan};
+      color: ${colors.bg};
+      box-shadow: 0 0 15px ${colors.neonCyan};
+    }
+  ` : css`
+    background: linear-gradient(180deg, ${colors.primary} 0%, #7C3AED 100%);
+    border-color: ${colors.neonPink};
+    color: ${colors.text};
+    box-shadow: 0 4px 0 #5B21B6, 0 0 10px ${colors.primary};
+
+    &:hover:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #5B21B6, 0 0 20px ${colors.primary};
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 #5B21B6, 0 0 20px ${colors.primary};
+    }
+  `}
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Pixel corners */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    width: 6px;
+    height: 6px;
+    background: ${colors.bg};
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 6px;
+    height: 6px;
+    background: ${colors.bg};
+  }
+`;
+
+const Main = styled.main`
+  max-width: 72rem;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem 1rem;
+  position: relative;
+  z-index: 10;
+`;
+
+const PixelCard = styled.div`
+  background: ${colors.bgCard};
+  border: 3px solid ${colors.border};
+  padding: 1rem;
+  position: relative;
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(168, 85, 247, 0.2);
+
+  /* Pixel corners */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    width: 8px;
+    height: 8px;
+    background: ${colors.bg};
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    background: ${colors.bg};
+  }
+`;
+
+const CardTitle = styled.h2`
+  font-family: var(--font-pixel);
+  font-size: 0.625rem;
+  color: ${colors.neonGreen};
+  margin-bottom: 1rem;
+  text-shadow: 0 0 10px ${colors.neonGreen};
+`;
+
+const CardSubtitle = styled.h3`
+  font-family: var(--font-pixel);
+  font-size: 0.5rem;
+  color: ${colors.neonYellow};
+  margin-bottom: 0.75rem;
+  text-shadow: 0 0 5px ${colors.neonYellow};
+`;
+
+const EmptyText = styled.p`
+  font-family: var(--font-terminal);
+  font-size: 1.5rem;
+  color: ${colors.textMuted};
+  text-align: center;
+  padding: 2rem 0;
+`;
+
+const ContentWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 1.5rem;
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
+  }
+`;
+
+const ControlsColumn = styled.div`
+  width: 100%;
+
+  @media (min-width: 1024px) {
+    order: 2;
+    width: 20rem;
+    flex-shrink: 0;
+  }
+`;
+
+const PreviewColumn = styled.div`
+  flex: 1;
+
+  @media (min-width: 1024px) {
+    order: 1;
+  }
+`;
+
+const PreviewHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+`;
+
+const PreviewContainer = styled.div`
+  background: ${colors.bgLight};
+  border: 2px dashed ${colors.border};
+  border-radius: 4px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const PreviewImage = styled.img`
+  max-height: 250px;
+  max-width: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+
+  @media (min-width: 640px) {
+    max-height: 400px;
+  }
+`;
+
+const InfoGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+`;
+
+const InfoColumn = styled.div``;
+
+const InfoTitle = styled.h4`
+  font-family: var(--font-pixel);
+  font-size: 0.5rem;
+  color: ${colors.neonCyan};
+  margin-bottom: 0.5rem;
+`;
+
+const InfoList = styled.dl`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const InfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--font-terminal);
+  font-size: 1.25rem;
+`;
+
+const InfoLabel = styled.dt`
+  color: ${colors.textMuted};
+`;
+
+const InfoValue = styled.dd`
+  color: ${colors.text};
+`;
+
+const InfoValueGreen = styled.dd`
+  color: ${colors.neonGreen};
+  font-weight: 500;
+`;
+
+const EmptyPreview = styled.div`
+  font-family: var(--font-terminal);
+  font-size: 1.5rem;
+  color: ${colors.textMuted};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+
+  @media (min-width: 640px) {
+    height: 300px;
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: ${colors.bg};
+`;
+
+const LoadingText = styled.div`
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+  color: ${colors.neonCyan};
+  animation: ${blink} 1s step-end infinite;
+`;
+
+const StatsCard = styled(PixelCard)`
+  margin-top: 1rem;
+`;
+
+const ProgressCard = styled(PixelCard)`
+  animation: ${glowPulse} 2s ease-in-out infinite;
+`;
+
+const ImageQueueWrapper = styled.div`
+  /* Style wrapper for ImageQueue component */
+`;
+
+const BatchControlsWrapper = styled.div`
+  /* Style wrapper for BatchControls component */
+`;
+
+const ProgressBarWrapper = styled.div`
+  /* Style wrapper for ProgressBar component */
+`;
 
 interface StoredImageData {
   name: string;
@@ -193,24 +678,20 @@ export default function BatchPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="text-zinc-600 dark:text-zinc-400">Loading...</div>
-      </div>
+      <LoadingContainer>
+        <LoadingText>LOADING...</LoadingText>
+      </LoadingContainer>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950">
+    <PageContainer>
       {/* Header */}
-      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-1 text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white sm:gap-2"
-            >
-              <svg
-                className="h-5 w-5"
+      <Header>
+        <HeaderContent>
+          <HeaderLeft>
+            <BackButton onClick={handleBack}>
+              <BackIcon
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -221,203 +702,182 @@ export default function BatchPage() {
                   strokeWidth={2}
                   d="M15 19l-7-7 7-7"
                 />
-              </svg>
-              <span className="hidden sm:inline">Back</span>
-            </button>
-            <div className="hidden h-6 w-px bg-zinc-200 dark:bg-zinc-700 sm:block" />
-            <h1 className="text-base font-semibold text-zinc-900 dark:text-white sm:text-lg">
-              Batch Editor
-            </h1>
-            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 sm:text-sm">
-              {images.length}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
+              </BackIcon>
+              <BackText>BACK</BackText>
+            </BackButton>
+            <Divider />
+            <Title>BATCH EDITOR</Title>
+            <ImageCount>{images.length}</ImageCount>
+          </HeaderLeft>
+          <HeaderRight>
             {hasProcessedImages && (
-              <Button variant="outline" size="sm" onClick={handleReset}>
+              <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
                 Reset
-              </Button>
+              </PixelButton>
             )}
             {allProcessed ? (
-              <Button size="sm" onClick={handleDownloadZip}>
-                <span className="hidden sm:inline">Download </span>ZIP
-              </Button>
+              <PixelButton $size="sm" onClick={handleDownloadZip}>
+                ZIP
+              </PixelButton>
             ) : (
-              <Button
-                size="sm"
+              <PixelButton
+                $size="sm"
                 onClick={handleProcess}
                 disabled={isProcessing || images.length === 0}
               >
-                {isProcessing ? 'Processing...' : <><span className="hidden sm:inline">Process </span>All</>}
-              </Button>
+                {isProcessing ? 'Processing...' : 'Process All'}
+              </PixelButton>
             )}
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+          </HeaderRight>
+        </HeaderContent>
+      </Header>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6">
+      <Main>
         {/* Selected Images */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="mb-4 font-medium text-zinc-900 dark:text-white">
-            Selected Images
-          </h2>
+        <PixelCard>
+          <CardTitle>SELECTED IMAGES</CardTitle>
 
           {images.length > 0 ? (
-            <ImageQueue
-              images={images}
-              onRemove={handleRemove}
-              selectedId={selectedId || undefined}
-              onSelect={setSelectedId}
-            />
+            <ImageQueueWrapper>
+              <ImageQueue
+                images={images}
+                onRemove={handleRemove}
+                selectedId={selectedId || undefined}
+                onSelect={setSelectedId}
+              />
+            </ImageQueueWrapper>
           ) : (
-            <p className="py-8 text-center text-zinc-500 dark:text-zinc-400">
-              No images selected. Go back to select images.
-            </p>
+            <EmptyText>NO IMAGES SELECTED. GO BACK TO SELECT IMAGES.</EmptyText>
           )}
-        </div>
+        </PixelCard>
 
         {/* Progress */}
         {isProcessing && (
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <ProgressBar
-              current={progress.current}
-              total={progress.total}
-              label={progress.file ? `Processing: ${progress.file}` : 'Starting...'}
-            />
-          </div>
+          <ProgressCard>
+            <ProgressBarWrapper>
+              <ProgressBar
+                current={progress.current}
+                total={progress.total}
+                label={progress.file ? `Processing: ${progress.file}` : 'Starting...'}
+              />
+            </ProgressBarWrapper>
+          </ProgressCard>
         )}
 
-        <div className="flex flex-1 flex-col gap-6 lg:flex-row">
-          {/* Controls - show first on mobile for better UX */}
-          <div className="w-full lg:order-2 lg:w-80 lg:shrink-0">
-            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
-              <BatchControls
-                options={options}
-                onChange={handleOptionsChange}
-                originalWidth={selectedImage?.originalWidth}
-                originalHeight={selectedImage?.originalHeight}
-              />
-            </div>
+        <ContentWrapper>
+          {/* Controls */}
+          <ControlsColumn>
+            <PixelCard>
+              <BatchControlsWrapper>
+                <BatchControls
+                  options={options}
+                  onChange={handleOptionsChange}
+                  originalWidth={selectedImage?.originalWidth}
+                  originalHeight={selectedImage?.originalHeight}
+                />
+              </BatchControlsWrapper>
+            </PixelCard>
 
             {/* Stats */}
             {hasProcessedImages && (
-              <div className="mt-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                <h3 className="mb-3 font-medium text-zinc-900 dark:text-white">
-                  Batch Stats
-                </h3>
-                <dl className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <dt className="text-zinc-500">Total Original</dt>
-                    <dd className="text-zinc-900 dark:text-white">
-                      {formatFileSize(totalOriginalSize)}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-zinc-500">Total Processed</dt>
-                    <dd className="text-zinc-900 dark:text-white">
-                      {formatFileSize(totalProcessedSize)}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-zinc-500">Saved</dt>
-                    <dd className="font-medium text-green-600 dark:text-green-400">
+              <StatsCard>
+                <CardSubtitle>BATCH STATS</CardSubtitle>
+                <InfoList>
+                  <InfoRow>
+                    <InfoLabel>Total Original</InfoLabel>
+                    <InfoValue>{formatFileSize(totalOriginalSize)}</InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>Total Processed</InfoLabel>
+                    <InfoValue>{formatFileSize(totalProcessedSize)}</InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>Saved</InfoLabel>
+                    <InfoValueGreen>
                       {totalProcessedSize < totalOriginalSize
                         ? `-${Math.round(((totalOriginalSize - totalProcessedSize) / totalOriginalSize) * 100)}%`
                         : `+${Math.round(((totalProcessedSize - totalOriginalSize) / totalOriginalSize) * 100)}%`}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
+                    </InfoValueGreen>
+                  </InfoRow>
+                </InfoList>
+              </StatsCard>
             )}
-          </div>
+          </ControlsColumn>
 
           {/* Preview */}
-          <div className="flex-1 lg:order-1">
-            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-medium text-zinc-900 dark:text-white">
-                  Preview
-                </h2>
+          <PreviewColumn>
+            <PixelCard>
+              <PreviewHeader>
+                <CardTitle>PREVIEW</CardTitle>
                 {selectedImage?.processedImage && (
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <PixelButton
+                    $variant="outline"
+                    $size="sm"
                     onClick={handleDownloadSingle}
                   >
                     Download
-                  </Button>
+                  </PixelButton>
                 )}
-              </div>
+              </PreviewHeader>
 
               {selectedImage ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center rounded-lg bg-zinc-100 p-4 dark:bg-zinc-800">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                <div>
+                  <PreviewContainer>
+                    <PreviewImage
                       src={
                         selectedImage.processedImage?.url ||
                         selectedImage.previewUrl
                       }
                       alt={selectedImage.name}
-                      className="max-h-[250px] max-w-full object-contain sm:max-h-[400px]"
                     />
-                  </div>
+                  </PreviewContainer>
 
                   {/* Image Info */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <h4 className="mb-2 font-medium text-zinc-700 dark:text-zinc-300">
-                        Original
-                      </h4>
-                      <dl className="space-y-1">
-                        <div className="flex justify-between gap-2">
-                          <dt className="text-zinc-500">Size</dt>
-                          <dd className="text-zinc-900 dark:text-white">
-                            {formatFileSize(selectedImage.size)}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between gap-2">
-                          <dt className="text-zinc-500">Dim</dt>
-                          <dd className="text-zinc-900 dark:text-white">
+                  <InfoGrid>
+                    <InfoColumn>
+                      <InfoTitle>ORIGINAL</InfoTitle>
+                      <InfoList>
+                        <InfoRow>
+                          <InfoLabel>Size</InfoLabel>
+                          <InfoValue>{formatFileSize(selectedImage.size)}</InfoValue>
+                        </InfoRow>
+                        <InfoRow>
+                          <InfoLabel>Dim</InfoLabel>
+                          <InfoValue>
                             {selectedImage.originalWidth}x{selectedImage.originalHeight}
-                          </dd>
-                        </div>
-                      </dl>
-                    </div>
+                          </InfoValue>
+                        </InfoRow>
+                      </InfoList>
+                    </InfoColumn>
 
                     {selectedImage.processedImage && (
-                      <div>
-                        <h4 className="mb-2 font-medium text-zinc-700 dark:text-zinc-300">
-                          Processed
-                        </h4>
-                        <dl className="space-y-1">
-                          <div className="flex justify-between gap-2">
-                            <dt className="text-zinc-500">Size</dt>
-                            <dd className="text-zinc-900 dark:text-white">
+                      <InfoColumn>
+                        <InfoTitle>PROCESSED</InfoTitle>
+                        <InfoList>
+                          <InfoRow>
+                            <InfoLabel>Size</InfoLabel>
+                            <InfoValue>
                               {formatFileSize(selectedImage.processedImage.size)}
-                            </dd>
-                          </div>
-                          <div className="flex justify-between gap-2">
-                            <dt className="text-zinc-500">Dim</dt>
-                            <dd className="text-zinc-900 dark:text-white">
+                            </InfoValue>
+                          </InfoRow>
+                          <InfoRow>
+                            <InfoLabel>Dim</InfoLabel>
+                            <InfoValue>
                               {selectedImage.processedImage.width}x{selectedImage.processedImage.height}
-                            </dd>
-                          </div>
-                        </dl>
-                      </div>
+                            </InfoValue>
+                          </InfoRow>
+                        </InfoList>
+                      </InfoColumn>
                     )}
-                  </div>
+                  </InfoGrid>
                 </div>
               ) : (
-                <div className="flex h-[200px] items-center justify-center text-zinc-500 dark:text-zinc-400 sm:h-[300px]">
-                  Select an image to preview
-                </div>
+                <EmptyPreview>SELECT AN IMAGE TO PREVIEW</EmptyPreview>
               )}
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+            </PixelCard>
+          </PreviewColumn>
+        </ContentWrapper>
+      </Main>
+    </PageContainer>
   );
 }

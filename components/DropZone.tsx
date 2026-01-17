@@ -2,7 +2,147 @@
 
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import styled, { keyframes } from 'styled-components';
 import { ACCEPTED_FILE_TYPES, MAX_FILE_SIZE } from '@/lib/types';
+
+// Pixel Art Color Palette
+const colors = {
+  bg: '#0F0F23',
+  bgLight: '#1a1a2e',
+  bgCard: '#16213e',
+  neonPink: '#FF71CE',
+  neonCyan: '#01CDFE',
+  neonGreen: '#05FFA1',
+  text: '#E2E8F0',
+  textMuted: '#94A3B8',
+  border: '#2D3748',
+};
+
+const blink = keyframes`
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+`;
+
+const pulse = keyframes`
+  0%, 100% { box-shadow: 0 0 10px ${colors.neonCyan}40; }
+  50% { box-shadow: 0 0 20px ${colors.neonCyan}80; }
+`;
+
+interface DropZoneContainerProps {
+  $isDragActive: boolean;
+  $isDragReject: boolean;
+  $disabled: boolean;
+}
+
+const DropZoneContainer = styled.div<DropZoneContainerProps>`
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: ${colors.bgCard};
+  border: 3px dashed ${({ $isDragActive, $isDragReject }) =>
+    $isDragReject ? colors.neonPink : $isDragActive ? colors.neonCyan : colors.border};
+  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
+  opacity: ${({ $disabled }) => ($disabled ? 0.5 : 1)};
+  transition: all 0.2s;
+  box-shadow: ${({ $isDragActive }) =>
+    $isDragActive ? `0 0 20px ${colors.neonCyan}60` : `inset 0 0 30px ${colors.bg}80`};
+
+  &:hover {
+    border-color: ${colors.neonCyan};
+    box-shadow: 0 0 15px ${colors.neonCyan}40;
+  }
+`;
+
+const CompactContainer = styled.div<{ $isDragActive: boolean; $disabled: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: ${colors.bgCard};
+  border: 2px dashed ${({ $isDragActive }) => ($isDragActive ? colors.neonCyan : colors.border)};
+  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
+  opacity: ${({ $disabled }) => ($disabled ? 0.5 : 1)};
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: ${colors.neonCyan};
+    background: ${colors.bgLight};
+  }
+`;
+
+const IconContainer = styled.div`
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${colors.bgLight};
+  border: 2px solid ${colors.border};
+  margin-bottom: 1rem;
+
+  /* Pixel corners */
+  clip-path: polygon(
+    0% 15%, 15% 15%, 15% 0%,
+    85% 0%, 85% 15%, 100% 15%,
+    100% 85%, 85% 85%, 85% 100%,
+    15% 100%, 15% 85%, 0% 85%
+  );
+`;
+
+const Icon = styled.svg`
+  width: 32px;
+  height: 32px;
+  color: ${colors.neonCyan};
+`;
+
+const SmallIcon = styled.svg`
+  width: 16px;
+  height: 16px;
+  color: ${colors.neonCyan};
+`;
+
+const Title = styled.p`
+  font-family: var(--font-pixel);
+  font-size: 0.625rem;
+  color: ${colors.text};
+  text-align: center;
+  margin: 0 0 0.5rem;
+  line-height: 1.6;
+`;
+
+const Subtitle = styled.p`
+  font-family: var(--font-terminal);
+  font-size: 1.125rem;
+  color: ${colors.textMuted};
+  text-align: center;
+  margin: 0 0 0.5rem;
+`;
+
+const SupportText = styled.p`
+  font-family: var(--font-terminal);
+  font-size: 0.875rem;
+  color: ${colors.neonGreen};
+  margin: 0;
+
+  &::before {
+    content: '> ';
+    color: ${colors.neonPink};
+  }
+`;
+
+const CompactText = styled.span`
+  font-family: var(--font-terminal);
+  font-size: 1rem;
+  color: ${colors.textMuted};
+`;
+
+const BlinkingCursor = styled.span`
+  animation: ${blink} 1s infinite;
+  color: ${colors.neonCyan};
+`;
 
 interface DropZoneProps {
   onFileSelect?: (file: File) => void;
@@ -43,83 +183,62 @@ export default function DropZone({
   // Compact version for adding more images
   if (compact) {
     return (
-      <div
+      <CompactContainer
         {...getRootProps()}
-        className={`flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-sm transition-colors ${
-          isDragActive
-            ? 'border-zinc-500 bg-zinc-100 dark:bg-zinc-800'
-            : 'border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:border-zinc-600 dark:hover:bg-zinc-800'
-        } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+        $isDragActive={isDragActive}
+        $disabled={disabled}
       >
         <input {...getInputProps()} />
-        <svg
-          className="h-4 w-4 text-zinc-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <SmallIcon fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
             d="M12 4v16m8-8H4"
           />
-        </svg>
-        <span className="text-zinc-600 dark:text-zinc-400">Add more</span>
-      </div>
+        </SmallIcon>
+        <CompactText>ADD MORE</CompactText>
+      </CompactContainer>
     );
   }
 
   return (
-    <div
+    <DropZoneContainer
       {...getRootProps()}
-      className={`flex min-h-[300px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-colors ${
-        isDragActive
-          ? 'border-zinc-500 bg-zinc-100 dark:bg-zinc-800'
-          : isDragReject
-            ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-            : 'border-zinc-300 bg-zinc-50 hover:border-zinc-400 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600 dark:hover:bg-zinc-800'
-      } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+      $isDragActive={isDragActive}
+      $isDragReject={isDragReject}
+      $disabled={disabled}
     >
       <input {...getInputProps()} />
 
-      <div className="flex flex-col items-center gap-4 text-center">
-        <div className="rounded-full bg-zinc-200 p-4 dark:bg-zinc-700">
-          <svg
-            className="h-8 w-8 text-zinc-500 dark:text-zinc-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-        </div>
+      <IconContainer>
+        <Icon fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </Icon>
+      </IconContainer>
 
-        {isDragActive ? (
-          <p className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
-            Drop your {multiple ? 'images' : 'image'} here...
-          </p>
-        ) : (
-          <>
-            <div>
-              <p className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
-                Drag & drop your {multiple ? 'images' : 'image'} here
-              </p>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                or click to select {multiple ? 'files' : 'a file'}
-              </p>
-            </div>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500">
-              Supports: JPG, PNG, WebP (max 50MB)
-            </p>
-          </>
-        )}
-      </div>
-    </div>
+      {isDragActive ? (
+        <Title>
+          DROP {multiple ? 'FILES' : 'FILE'} HERE<BlinkingCursor>_</BlinkingCursor>
+        </Title>
+      ) : (
+        <>
+          <Title>
+            DRAG & DROP {multiple ? 'IMAGES' : 'IMAGE'}
+          </Title>
+          <Subtitle>
+            or click to select {multiple ? 'files' : 'a file'}
+          </Subtitle>
+          <SupportText>
+            Supports: JPG, PNG, WebP (max 50MB)
+          </SupportText>
+        </>
+      )}
+    </DropZoneContainer>
   );
 }

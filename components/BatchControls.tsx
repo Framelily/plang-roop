@@ -1,8 +1,67 @@
 'use client';
 
+import styled from 'styled-components';
 import { Input, Checkbox, RadioGroup, Slider } from '@/components/ui';
 import type { BatchOptions, ImageFormat } from '@/lib/types';
 import { FORMAT_LABELS, SUPPORTED_FORMATS } from '@/lib/types';
+
+// Pixel Art Color Palette
+const colors = {
+  bg: '#0F0F23',
+  bgLight: '#1a1a2e',
+  bgCard: '#16213e',
+  neonPink: '#FF71CE',
+  neonCyan: '#01CDFE',
+  text: '#E2E8F0',
+  textMuted: '#94A3B8',
+  border: '#2D3748',
+};
+
+const ControlsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const Section = styled.div``;
+
+const SectionTitle = styled.h3`
+  font-family: var(--font-pixel);
+  font-size: 0.625rem;
+  color: ${colors.neonPink};
+  text-shadow: 0 0 10px ${colors.neonPink}60;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+`;
+
+const FieldGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const Divider = styled.div`
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    ${colors.border} 20%,
+    ${colors.border} 80%,
+    transparent
+  );
+`;
+
+const HelpText = styled.p`
+  font-family: var(--font-terminal);
+  font-size: 0.875rem;
+  color: ${colors.textMuted};
+  margin: 0.5rem 0 0;
+
+  &::before {
+    content: '> ';
+    color: ${colors.neonCyan};
+  }
+`;
 
 interface BatchControlsProps {
   options: BatchOptions;
@@ -47,13 +106,11 @@ export default function BatchControls({
   }));
 
   return (
-    <div className="space-y-6">
+    <ControlsContainer>
       {/* Resize Section */}
-      <div>
-        <h3 className="mb-4 font-medium text-zinc-900 dark:text-white">
-          Resize
-        </h3>
-        <div className="space-y-4">
+      <Section>
+        <SectionTitle>Resize</SectionTitle>
+        <FieldGroup>
           <Input
             id="batch-width"
             type="number"
@@ -82,17 +139,15 @@ export default function BatchControls({
             checked={options.keepAspectRatio}
             onChange={(e) => onChange({ keepAspectRatio: e.target.checked })}
           />
-        </div>
-      </div>
+        </FieldGroup>
+      </Section>
 
-      <div className="h-px bg-zinc-200 dark:bg-zinc-700" />
+      <Divider />
 
       {/* Format Section */}
-      <div>
-        <h3 className="mb-4 font-medium text-zinc-900 dark:text-white">
-          Output Format
-        </h3>
-        <div className="space-y-3">
+      <Section>
+        <SectionTitle>Output Format</SectionTitle>
+        <FieldGroup>
           <Checkbox
             id="batch-useOriginal"
             label="Keep original format"
@@ -107,16 +162,14 @@ export default function BatchControls({
               options={formatOptions}
             />
           )}
-        </div>
-      </div>
+        </FieldGroup>
+      </Section>
 
-      <div className="h-px bg-zinc-200 dark:bg-zinc-700" />
+      <Divider />
 
       {/* Quality Section */}
-      <div>
-        <h3 className="mb-4 font-medium text-zinc-900 dark:text-white">
-          Quality
-        </h3>
+      <Section>
+        <SectionTitle>Quality</SectionTitle>
         <Slider
           id="batch-quality"
           min={10}
@@ -125,10 +178,10 @@ export default function BatchControls({
           value={Math.round(options.quality * 100)}
           onChange={(e) => onChange({ quality: Number(e.target.value) / 100 })}
         />
-        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+        <HelpText>
           Lower quality = smaller file size (affects JPG & WebP)
-        </p>
-      </div>
-    </div>
+        </HelpText>
+      </Section>
+    </ControlsContainer>
   );
 }

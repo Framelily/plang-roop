@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Press_Start_2P, VT323 } from "next/font/google";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
+import StyledComponentsRegistry from "@/lib/registry";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
@@ -12,6 +14,20 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const pressStart2P = Press_Start_2P({
+  weight: "400",
+  variable: "--font-pixel",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const vt323 = VT323({
+  weight: "400",
+  variable: "--font-terminal",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -50,12 +66,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${pressStart2P.variable} ${vt323.variable} antialiased`}
       >
-        <ThemeProvider>
-          <ServiceWorkerRegistration />
-          {children}
-        </ThemeProvider>
+        <StyledComponentsRegistry>
+          <AntdRegistry>
+            <ThemeProvider>
+              <ServiceWorkerRegistration />
+              {children}
+            </ThemeProvider>
+          </AntdRegistry>
+        </StyledComponentsRegistry>
       </body>
     </html>
   );

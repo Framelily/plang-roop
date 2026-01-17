@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Checkbox, RadioGroup, Slider } from '@/components/ui';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import styled, { keyframes, css } from 'styled-components';
 import ImagePreview from '@/components/ImagePreview';
 import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { processImage } from '@/lib/image/resize';
@@ -12,12 +11,791 @@ import { mayContainExif } from '@/lib/image/exif';
 import { formatFileSize, getFormatFromMimeType } from '@/lib/utils';
 import type { ImageFormat, ProcessedImage } from '@/lib/types';
 
+// Color Palette
+const colors = {
+  bg: '#0F0F23',
+  bgLight: '#1a1a2e',
+  bgCard: '#16213e',
+  primary: '#A855F7',
+  neonPink: '#FF71CE',
+  neonCyan: '#01CDFE',
+  neonGreen: '#05FFA1',
+  neonYellow: '#FFFB96',
+  text: '#E2E8F0',
+  textMuted: '#94A3B8',
+  border: '#2D3748',
+};
+
+// Keyframe Animations
+const scanline = keyframes`
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+`;
+
+const blink = keyframes`
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+`;
+
+const glowPulse = keyframes`
+  0%, 100% {
+    box-shadow: 0 0 5px ${colors.primary}, 0 0 10px ${colors.primary};
+  }
+  50% {
+    box-shadow: 0 0 10px ${colors.primary}, 0 0 20px ${colors.primary}, 0 0 30px ${colors.primary};
+  }
+`;
+
+// Styled Components
+const PageContainer = styled.div`
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: ${colors.bg};
+  font-family: var(--font-terminal);
+  color: ${colors.text};
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(
+      rgba(18, 16, 16, 0) 50%,
+      rgba(0, 0, 0, 0.25) 50%
+    );
+    background-size: 100% 4px;
+    animation: ${scanline} 8s linear infinite;
+    pointer-events: none;
+    z-index: 1001;
+    opacity: 0.1;
+  }
+`;
+
+const Header = styled.header`
+  border-bottom: 4px solid ${colors.border};
+  background-color: ${colors.bgLight};
+  position: relative;
+  z-index: 10;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, ${colors.neonPink}, ${colors.neonCyan}, ${colors.neonGreen});
+  }
+`;
+
+const HeaderContent = styled.div`
+  max-width: 72rem;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+`;
+
+const HeaderLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`;
+
+const BackButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: ${colors.textMuted};
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-terminal);
+  font-size: 18px;
+  transition: all 0.2s;
+  padding: 8px 12px;
+  border: 2px solid transparent;
+
+  &:hover {
+    color: ${colors.neonCyan};
+    border-color: ${colors.neonCyan};
+    text-shadow: 0 0 10px ${colors.neonCyan};
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+const Divider = styled.div`
+  width: 2px;
+  height: 24px;
+  background-color: ${colors.border};
+
+  @media (max-width: 640px) {
+    display: none;
+  }
+`;
+
+const Title = styled.h1`
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  color: ${colors.neonPink};
+  text-shadow: 0 0 10px ${colors.neonPink};
+  letter-spacing: 2px;
+
+  @media (min-width: 640px) {
+    font-size: 16px;
+  }
+`;
+
+const HeaderRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const PixelButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
+  font-family: var(--font-pixel);
+  font-size: ${props => props.$size === 'sm' ? '8px' : '10px'};
+  padding: ${props => props.$size === 'sm' ? '8px 12px' : '12px 16px'};
+  border: 4px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+
+  ${props => props.$variant === 'outline' ? css`
+    background-color: transparent;
+    border-color: ${colors.textMuted};
+    color: ${colors.textMuted};
+
+    &:hover:not(:disabled) {
+      border-color: ${colors.neonCyan};
+      color: ${colors.neonCyan};
+      text-shadow: 0 0 10px ${colors.neonCyan};
+      box-shadow: 0 0 10px ${colors.neonCyan};
+    }
+  ` : css`
+    background-color: ${colors.primary};
+    border-color: ${colors.neonPink};
+    color: ${colors.text};
+
+    &:hover:not(:disabled) {
+      background-color: ${colors.neonPink};
+      box-shadow: 0 0 20px ${colors.neonPink};
+      text-shadow: 0 0 10px ${colors.text};
+    }
+  `}
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(2px);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid transparent;
+  }
+`;
+
+const Main = styled.main`
+  max-width: 72rem;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px 16px;
+  position: relative;
+  z-index: 10;
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
+  }
+`;
+
+const ControlsSection = styled.div`
+  width: 100%;
+
+  @media (min-width: 1024px) {
+    width: 320px;
+    flex-shrink: 0;
+    order: 2;
+  }
+`;
+
+const Card = styled.div`
+  background-color: ${colors.bgCard};
+  border: 4px solid ${colors.border};
+  padding: 16px;
+  position: relative;
+
+  @media (min-width: 640px) {
+    padding: 20px;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, ${colors.neonGreen}, ${colors.neonCyan});
+  }
+`;
+
+const SectionTitle = styled.h3`
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: ${colors.neonGreen};
+  margin-bottom: 16px;
+  text-shadow: 0 0 5px ${colors.neonGreen};
+`;
+
+const SectionDivider = styled.div`
+  height: 2px;
+  background: linear-gradient(90deg, transparent, ${colors.border}, transparent);
+  margin: 20px 0;
+`;
+
+const InputGroup = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+`;
+
+const InputWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const InputLabel = styled.label`
+  font-family: var(--font-terminal);
+  font-size: 16px;
+  color: ${colors.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 2px;
+`;
+
+const InputContainer = styled.div`
+  display: flex;
+  align-items: center;
+  background-color: ${colors.bg};
+  border: 3px solid ${colors.border};
+  transition: all 0.2s;
+
+  &:focus-within {
+    border-color: ${colors.neonCyan};
+    box-shadow: 0 0 10px ${colors.neonCyan};
+  }
+`;
+
+const StyledInput = styled.input`
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  font-family: var(--font-terminal);
+  font-size: 20px;
+  color: ${colors.text};
+  outline: none;
+  width: 100%;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &[type=number] {
+    -moz-appearance: textfield;
+  }
+`;
+
+const InputSuffix = styled.span`
+  padding: 0 12px;
+  font-family: var(--font-terminal);
+  font-size: 16px;
+  color: ${colors.textMuted};
+  background-color: ${colors.bgLight};
+  height: 100%;
+  display: flex;
+  align-items: center;
+`;
+
+const CheckboxWrapper = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 0;
+
+  &:hover span {
+    border-color: ${colors.neonCyan};
+  }
+`;
+
+const CheckboxInput = styled.input`
+  display: none;
+
+  &:checked + span {
+    background-color: ${colors.primary};
+    border-color: ${colors.neonPink};
+
+    &::after {
+      content: 'X';
+      display: block;
+      color: ${colors.text};
+      font-family: var(--font-pixel);
+      font-size: 10px;
+      text-align: center;
+      line-height: 18px;
+    }
+  }
+`;
+
+const CheckboxBox = styled.span`
+  width: 24px;
+  height: 24px;
+  border: 3px solid ${colors.border};
+  background-color: ${colors.bg};
+  transition: all 0.2s;
+`;
+
+const CheckboxLabel = styled.span`
+  font-family: var(--font-terminal);
+  font-size: 18px;
+  color: ${colors.text};
+`;
+
+const RadioGroupWrapper = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
+const RadioLabel = styled.label<{ $checked: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 3px solid ${props => props.$checked ? colors.neonPink : colors.border};
+  background-color: ${props => props.$checked ? colors.primary : colors.bg};
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: ${props => props.$checked ? colors.text : colors.textMuted};
+  text-transform: uppercase;
+
+  ${props => props.$checked && css`
+    box-shadow: 0 0 10px ${colors.neonPink};
+    text-shadow: 0 0 5px ${colors.text};
+  `}
+
+  &:hover {
+    border-color: ${colors.neonCyan};
+  }
+
+  input {
+    display: none;
+  }
+`;
+
+const SliderWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const SliderContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`;
+
+const StyledSlider = styled.input`
+  flex: 1;
+  -webkit-appearance: none;
+  height: 8px;
+  background: ${colors.bg};
+  border: 2px solid ${colors.border};
+  outline: none;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: ${colors.neonGreen};
+    border: 3px solid ${colors.bgLight};
+    cursor: pointer;
+    box-shadow: 0 0 10px ${colors.neonGreen};
+  }
+
+  &::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: ${colors.neonGreen};
+    border: 3px solid ${colors.bgLight};
+    cursor: pointer;
+    box-shadow: 0 0 10px ${colors.neonGreen};
+  }
+`;
+
+const SliderValue = styled.span`
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: ${colors.neonYellow};
+  min-width: 40px;
+  text-align: right;
+  text-shadow: 0 0 5px ${colors.neonYellow};
+`;
+
+const HelpText = styled.p`
+  font-family: var(--font-terminal);
+  font-size: 14px;
+  color: ${colors.textMuted};
+  margin-top: 8px;
+`;
+
+const InfoGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+`;
+
+const InfoBlock = styled.div``;
+
+const InfoTitle = styled.h3`
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: ${colors.neonCyan};
+  margin-bottom: 12px;
+  text-shadow: 0 0 5px ${colors.neonCyan};
+
+  @media (min-width: 1024px) {
+    margin-top: 16px;
+  }
+`;
+
+const InfoList = styled.dl`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const InfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+`;
+
+const InfoLabel = styled.dt`
+  font-family: var(--font-terminal);
+  font-size: 16px;
+  color: ${colors.textMuted};
+`;
+
+const InfoValue = styled.dd`
+  font-family: var(--font-terminal);
+  font-size: 16px;
+  color: ${colors.text};
+`;
+
+const SavedValue = styled.dd<{ $positive: boolean }>`
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: ${props => props.$positive ? colors.neonGreen : colors.neonPink};
+  text-shadow: 0 0 5px ${props => props.$positive ? colors.neonGreen : colors.neonPink};
+`;
+
+const PreviewSection = styled.div`
+  flex: 1;
+
+  @media (min-width: 1024px) {
+    order: 1;
+  }
+`;
+
+const PreviewCard = styled(Card)`
+  &::before {
+    background: linear-gradient(90deg, ${colors.neonPink}, ${colors.primary});
+  }
+`;
+
+const PreviewHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+`;
+
+const PreviewTitle = styled.h2`
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: ${colors.neonPink};
+  text-shadow: 0 0 5px ${colors.neonPink};
+`;
+
+const PreviewInfo = styled.span`
+  font-family: var(--font-terminal);
+  font-size: 14px;
+  color: ${colors.textMuted};
+
+  @media (min-width: 640px) {
+    font-size: 16px;
+  }
+`;
+
+const PreviewContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: ${colors.bg};
+  border: 3px solid ${colors.border};
+  padding: 8px;
+
+  @media (min-width: 640px) {
+    padding: 16px;
+  }
+`;
+
+const PreviewImage = styled.img`
+  max-height: 250px;
+  max-width: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+
+  @media (min-width: 640px) {
+    max-height: 400px;
+  }
+
+  @media (min-width: 1024px) {
+    max-height: 500px;
+  }
+`;
+
+const FileName = styled.p`
+  font-family: var(--font-terminal);
+  font-size: 14px;
+  color: ${colors.textMuted};
+  margin-top: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (min-width: 640px) {
+    font-size: 16px;
+    margin-top: 12px;
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background-color: ${colors.bg};
+`;
+
+const LoadingText = styled.div`
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  color: ${colors.neonCyan};
+  text-shadow: 0 0 10px ${colors.neonCyan};
+  animation: ${blink} 1s infinite;
+`;
+
+const BlinkingCursor = styled.span`
+  animation: ${blink} 0.7s infinite;
+`;
+
 interface StoredImageInfo {
   name: string;
   originalWidth: number;
   originalHeight: number;
   size: number;
   type: string;
+}
+
+// Custom Input Component
+interface CustomInputProps {
+  id: string;
+  type?: string;
+  label: string;
+  suffix?: string;
+  value: number;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  min?: number;
+  max?: number;
+}
+
+function CustomInput({ id, type = 'text', label, suffix, value, onChange, min, max }: CustomInputProps) {
+  return (
+    <InputWrapper>
+      <InputLabel htmlFor={id}>{label}</InputLabel>
+      <InputContainer>
+        <StyledInput
+          id={id}
+          type={type}
+          value={value}
+          onChange={onChange}
+          min={min}
+          max={max}
+        />
+        {suffix && <InputSuffix>{suffix}</InputSuffix>}
+      </InputContainer>
+    </InputWrapper>
+  );
+}
+
+// Custom Checkbox Component
+interface CustomCheckboxProps {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+function CustomCheckbox({ id, label, checked, onChange }: CustomCheckboxProps) {
+  return (
+    <CheckboxWrapper htmlFor={id}>
+      <CheckboxInput
+        type="checkbox"
+        id={id}
+        checked={checked}
+        onChange={onChange}
+      />
+      <CheckboxBox />
+      <CheckboxLabel>{label}</CheckboxLabel>
+    </CheckboxWrapper>
+  );
+}
+
+// Custom RadioGroup Component
+interface RadioOption {
+  value: string;
+  label: string;
+}
+
+interface CustomRadioGroupProps {
+  name: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: RadioOption[];
+}
+
+function CustomRadioGroup({ name, value, onChange, options }: CustomRadioGroupProps) {
+  return (
+    <RadioGroupWrapper>
+      {options.map((option) => (
+        <RadioLabel key={option.value} $checked={value === option.value}>
+          <input
+            type="radio"
+            name={name}
+            value={option.value}
+            checked={value === option.value}
+            onChange={() => onChange(option.value)}
+          />
+          {option.label}
+        </RadioLabel>
+      ))}
+    </RadioGroupWrapper>
+  );
+}
+
+// Custom Slider Component
+interface CustomSliderProps {
+  id: string;
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+function CustomSlider({ id, min, max, step, value, onChange }: CustomSliderProps) {
+  return (
+    <SliderWrapper>
+      <SliderContainer>
+        <StyledSlider
+          type="range"
+          id={id}
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={onChange}
+        />
+        <SliderValue>{value}%</SliderValue>
+      </SliderContainer>
+    </SliderWrapper>
+  );
 }
 
 export default function EditorPage() {
@@ -110,7 +888,7 @@ export default function EditorPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [imageDataUrl, imageInfo, width, height, keepAspectRatio, format, processedImage]);
+  }, [imageDataUrl, imageInfo, width, height, keepAspectRatio, format, quality, processedImage]);
 
   // Download processed image
   const handleDownload = useCallback(() => {
@@ -143,9 +921,9 @@ export default function EditorPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="text-zinc-600 dark:text-zinc-400">Loading...</div>
-      </div>
+      <LoadingContainer>
+        <LoadingText>LOADING<BlinkingCursor>_</BlinkingCursor></LoadingText>
+      </LoadingContainer>
     );
   }
 
@@ -159,16 +937,12 @@ export default function EditorPage() {
   const displaySize = processedImage?.size || imageInfo.size;
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950">
-      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-1 text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white sm:gap-2"
-            >
+    <PageContainer>
+      <Header>
+        <HeaderContent>
+          <HeaderLeft>
+            <BackButton onClick={handleBack}>
               <svg
-                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -180,42 +954,37 @@ export default function EditorPage() {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              <span className="hidden sm:inline">Back</span>
-            </button>
-            <div className="hidden h-6 w-px bg-zinc-200 dark:bg-zinc-700 sm:block" />
-            <h1 className="text-base font-semibold text-zinc-900 dark:text-white sm:text-lg">
-              Editor
-            </h1>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="outline" size="sm" onClick={handleReset}>
+              <span>BACK</span>
+            </BackButton>
+            <Divider />
+            <Title>EDITOR</Title>
+          </HeaderLeft>
+          <HeaderRight>
+            <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
               Reset
-            </Button>
+            </PixelButton>
             {processedImage ? (
-              <Button size="sm" onClick={handleDownload}>
-                <span className="hidden sm:inline">Down</span>load
-              </Button>
+              <PixelButton $size="sm" onClick={handleDownload}>
+                Download
+              </PixelButton>
             ) : (
-              <Button size="sm" onClick={handleProcess} disabled={isProcessing}>
-                {isProcessing ? '...' : <><span className="hidden sm:inline">Apply </span>Go</>}
-              </Button>
+              <PixelButton $size="sm" onClick={handleProcess} disabled={isProcessing}>
+                {isProcessing ? '...' : 'GO'}
+              </PixelButton>
             )}
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+          </HeaderRight>
+        </HeaderContent>
+      </Header>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 lg:flex-row">
-        {/* Controls Section - show first on mobile */}
-        <div className="w-full lg:order-2 lg:w-80 lg:shrink-0">
-          <div className="space-y-6 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
+      <Main>
+        {/* Controls Section */}
+        <ControlsSection>
+          <Card>
             {/* Resize Section */}
             <div>
-              <h3 className="mb-4 font-medium text-zinc-900 dark:text-white">
-                Resize
-              </h3>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-1 sm:gap-4">
-                <Input
+              <SectionTitle>RESIZE</SectionTitle>
+              <InputGroup>
+                <CustomInput
                   id="width"
                   type="number"
                   label="Width"
@@ -225,7 +994,7 @@ export default function EditorPage() {
                   min={1}
                   max={10000}
                 />
-                <Input
+                <CustomInput
                   id="height"
                   type="number"
                   label="Height"
@@ -235,9 +1004,9 @@ export default function EditorPage() {
                   min={1}
                   max={10000}
                 />
-              </div>
-              <div className="mt-3">
-                <Checkbox
+              </InputGroup>
+              <div style={{ marginTop: '12px' }}>
+                <CustomCheckbox
                   id="keepRatio"
                   label="Keep aspect ratio"
                   checked={keepAspectRatio}
@@ -246,14 +1015,12 @@ export default function EditorPage() {
               </div>
             </div>
 
-            <div className="h-px bg-zinc-200 dark:bg-zinc-700" />
+            <SectionDivider />
 
             {/* Format Section */}
             <div>
-              <h3 className="mb-4 font-medium text-zinc-900 dark:text-white">
-                Output Format
-              </h3>
-              <RadioGroup
+              <SectionTitle>OUTPUT FORMAT</SectionTitle>
+              <CustomRadioGroup
                 name="format"
                 value={format}
                 onChange={(value) => setFormat(value as ImageFormat)}
@@ -265,14 +1032,12 @@ export default function EditorPage() {
               />
             </div>
 
-            <div className="h-px bg-zinc-200 dark:bg-zinc-700" />
+            <SectionDivider />
 
             {/* Quality Section */}
             <div>
-              <h3 className="mb-4 font-medium text-zinc-900 dark:text-white">
-                Quality
-              </h3>
-              <Slider
+              <SectionTitle>QUALITY</SectionTitle>
+              <CustomSlider
                 id="quality"
                 min={10}
                 max={100}
@@ -280,115 +1045,108 @@ export default function EditorPage() {
                 value={quality}
                 onChange={(e) => setQuality(Number(e.target.value))}
               />
-              <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+              <HelpText>
                 Lower quality = smaller file size (JPG & WebP)
-              </p>
+              </HelpText>
             </div>
 
             {/* EXIF Section - only show for JPEG */}
             {imageInfo && mayContainExif(imageInfo.type) && (
               <>
-                <div className="h-px bg-zinc-200 dark:bg-zinc-700" />
+                <SectionDivider />
                 <div>
-                  <h3 className="mb-4 font-medium text-zinc-900 dark:text-white">
-                    Privacy
-                  </h3>
-                  <Checkbox
+                  <SectionTitle>PRIVACY</SectionTitle>
+                  <CustomCheckbox
                     id="stripExif"
                     label="Strip EXIF metadata"
                     checked={stripExif}
                     onChange={(e) => setStripExif(e.target.checked)}
                   />
-                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  <HelpText>
                     Removes location, camera info, etc.
-                  </p>
+                  </HelpText>
                 </div>
               </>
             )}
 
-            <div className="h-px bg-zinc-200 dark:bg-zinc-700" />
+            <SectionDivider />
 
             {/* Info Section */}
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-1 lg:gap-0">
-              <div>
-                <h3 className="mb-2 font-medium text-zinc-900 dark:text-white lg:mb-3">
-                  Original
-                </h3>
-                <dl className="space-y-1 text-sm lg:space-y-2">
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-zinc-500 dark:text-zinc-400">Dim</dt>
-                    <dd className="text-zinc-900 dark:text-white">
+            <InfoGrid>
+              <InfoBlock>
+                <InfoTitle>ORIGINAL</InfoTitle>
+                <InfoList>
+                  <InfoRow>
+                    <InfoLabel>DIM</InfoLabel>
+                    <InfoValue>
                       {imageInfo.originalWidth}x{imageInfo.originalHeight}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-zinc-500 dark:text-zinc-400">Size</dt>
-                    <dd className="text-zinc-900 dark:text-white">
+                    </InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>SIZE</InfoLabel>
+                    <InfoValue>
                       {formatFileSize(imageInfo.size)}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
+                    </InfoValue>
+                  </InfoRow>
+                </InfoList>
+              </InfoBlock>
 
               {/* Processed Info */}
               {processedImage && (
-                <div>
-                  <h3 className="mb-2 font-medium text-zinc-900 dark:text-white lg:mb-3 lg:mt-4">
-                    Processed
-                  </h3>
-                  <dl className="space-y-1 text-sm lg:space-y-2">
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-zinc-500 dark:text-zinc-400">Dim</dt>
-                      <dd className="text-zinc-900 dark:text-white">
+                <InfoBlock>
+                  <InfoTitle>PROCESSED</InfoTitle>
+                  <InfoList>
+                    <InfoRow>
+                      <InfoLabel>DIM</InfoLabel>
+                      <InfoValue>
                         {processedImage.width}x{processedImage.height}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-zinc-500 dark:text-zinc-400">Size</dt>
-                      <dd className="text-zinc-900 dark:text-white">
+                      </InfoValue>
+                    </InfoRow>
+                    <InfoRow>
+                      <InfoLabel>SIZE</InfoLabel>
+                      <InfoValue>
                         {formatFileSize(processedImage.size)}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-zinc-500 dark:text-zinc-400">Saved</dt>
-                      <dd className="font-medium text-green-600 dark:text-green-400">
+                      </InfoValue>
+                    </InfoRow>
+                    <InfoRow>
+                      <InfoLabel>SAVED</InfoLabel>
+                      <SavedValue $positive={processedImage.size < imageInfo.size}>
                         {processedImage.size < imageInfo.size
                           ? `-${Math.round(((imageInfo.size - processedImage.size) / imageInfo.size) * 100)}%`
                           : `+${Math.round(((processedImage.size - imageInfo.size) / imageInfo.size) * 100)}%`}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
+                      </SavedValue>
+                    </InfoRow>
+                  </InfoList>
+                </InfoBlock>
               )}
-            </div>
-          </div>
-        </div>
+            </InfoGrid>
+          </Card>
+        </ControlsSection>
 
         {/* Preview Section */}
-        <div className="flex-1 lg:order-1">
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="font-medium text-zinc-900 dark:text-white">
-                {processedImage ? 'Processed' : 'Original'}
-              </h2>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400 sm:text-sm">
-                {displayWidth}x{displayHeight} &bull; {formatFileSize(displaySize)}
-              </span>
-            </div>
-            <div className="flex items-center justify-center rounded-lg bg-zinc-100 p-2 dark:bg-zinc-800 sm:p-4">
+        <PreviewSection>
+          <PreviewCard>
+            <PreviewHeader>
+              <PreviewTitle>
+                {processedImage ? 'PROCESSED' : 'ORIGINAL'}
+              </PreviewTitle>
+              <PreviewInfo>
+                {displayWidth}x{displayHeight} | {formatFileSize(displaySize)}
+              </PreviewInfo>
+            </PreviewHeader>
+            <PreviewContainer>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <PreviewImage
                 src={displayImage}
                 alt={imageInfo.name}
-                className="max-h-[250px] max-w-full object-contain sm:max-h-[400px] lg:max-h-[500px]"
               />
-            </div>
-            <p className="mt-2 truncate text-xs text-zinc-600 dark:text-zinc-400 sm:mt-3 sm:text-sm">
+            </PreviewContainer>
+            <FileName>
               {imageInfo.name}
-            </p>
-          </div>
-        </div>
-      </main>
-    </div>
+            </FileName>
+          </PreviewCard>
+        </PreviewSection>
+      </Main>
+    </PageContainer>
   );
 }

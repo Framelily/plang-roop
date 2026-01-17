@@ -1,6 +1,75 @@
 'use client';
 
 import { InputHTMLAttributes, forwardRef } from 'react';
+import styled from 'styled-components';
+
+// Pixel Art Color Palette
+const colors = {
+  bg: '#0F0F23',
+  bgLight: '#1a1a2e',
+  bgCard: '#16213e',
+  neonCyan: '#01CDFE',
+  neonPink: '#FF71CE',
+  text: '#E2E8F0',
+  textMuted: '#94A3B8',
+  border: '#2D3748',
+};
+
+const InputWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+`;
+
+const Label = styled.label`
+  font-family: var(--font-pixel);
+  font-size: 0.5rem;
+  color: ${colors.neonCyan};
+  text-transform: uppercase;
+`;
+
+const InputContainer = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+
+const StyledInput = styled.input<{ $hasSuffix?: boolean }>`
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  padding-right: ${({ $hasSuffix }) => ($hasSuffix ? '3rem' : '0.75rem')};
+  background: ${colors.bgLight};
+  border: 2px solid ${colors.border};
+  color: ${colors.text};
+  font-family: var(--font-terminal);
+  font-size: 1.125rem;
+  transition: all 0.2s;
+
+  &::placeholder {
+    color: ${colors.textMuted};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${colors.neonCyan};
+    box-shadow: 0 0 10px ${colors.neonCyan}40;
+  }
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
+`;
+
+const Suffix = styled.span`
+  position: absolute;
+  right: 0.75rem;
+  font-family: var(--font-terminal);
+  font-size: 1rem;
+  color: ${colors.textMuted};
+`;
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -8,33 +77,20 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className = '', label, suffix, id, ...props }, ref) => {
+  ({ label, suffix, id, ...props }, ref) => {
     return (
-      <div className="flex flex-col gap-1.5">
-        {label && (
-          <label
-            htmlFor={id}
-            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
-            {label}
-          </label>
-        )}
-        <div className="relative flex items-center">
-          <input
+      <InputWrapper>
+        {label && <Label htmlFor={id}>{label}</Label>}
+        <InputContainer>
+          <StyledInput
             ref={ref}
             id={id}
-            className={`w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder:text-zinc-500 ${
-              suffix ? 'pr-12' : ''
-            } ${className}`}
+            $hasSuffix={!!suffix}
             {...props}
           />
-          {suffix && (
-            <span className="absolute right-3 text-sm text-zinc-500 dark:text-zinc-400">
-              {suffix}
-            </span>
-          )}
-        </div>
-      </div>
+          {suffix && <Suffix>{suffix}</Suffix>}
+        </InputContainer>
+      </InputWrapper>
     );
   }
 );

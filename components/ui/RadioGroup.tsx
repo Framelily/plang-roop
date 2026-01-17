@@ -1,5 +1,84 @@
 'use client';
 
+import styled from 'styled-components';
+
+// Pixel Art Color Palette
+const colors = {
+  bg: '#0F0F23',
+  bgLight: '#1a1a2e',
+  neonCyan: '#01CDFE',
+  neonPink: '#FF71CE',
+  text: '#E2E8F0',
+  textMuted: '#94A3B8',
+  border: '#2D3748',
+};
+
+const RadioGroupWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const GroupLabel = styled.span`
+  font-family: var(--font-pixel);
+  font-size: 0.5rem;
+  color: ${colors.neonCyan};
+  text-transform: uppercase;
+`;
+
+const OptionsContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+`;
+
+const RadioLabel = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-family: var(--font-terminal);
+  font-size: 1rem;
+  color: ${colors.text};
+  transition: color 0.2s;
+
+  &:hover {
+    color: ${colors.neonPink};
+  }
+`;
+
+const HiddenRadio = styled.input.attrs({ type: 'radio' })`
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+`;
+
+const StyledRadio = styled.div<{ $checked: boolean }>`
+  width: 16px;
+  height: 16px;
+  background: ${colors.bgLight};
+  border: 2px solid ${({ $checked }) => ($checked ? colors.neonPink : colors.border)};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  ${RadioLabel}:hover & {
+    border-color: ${colors.neonPink};
+    box-shadow: 0 0 8px ${colors.neonPink}40;
+  }
+
+  &::after {
+    content: '';
+    display: ${({ $checked }) => ($checked ? 'block' : 'none')};
+    width: 8px;
+    height: 8px;
+    background: ${colors.neonPink};
+  }
+`;
+
 interface RadioOption {
   value: string;
   label: string;
@@ -21,32 +100,22 @@ export default function RadioGroup({
   label,
 }: RadioGroupProps) {
   return (
-    <div className="flex flex-col gap-2">
-      {label && (
-        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          {label}
-        </span>
-      )}
-      <div className="flex gap-4">
+    <RadioGroupWrapper>
+      {label && <GroupLabel>{label}</GroupLabel>}
+      <OptionsContainer>
         {options.map((option) => (
-          <label
-            key={option.value}
-            className="inline-flex cursor-pointer items-center gap-2"
-          >
-            <input
-              type="radio"
+          <RadioLabel key={option.value}>
+            <HiddenRadio
               name={name}
               value={option.value}
               checked={value === option.value}
               onChange={(e) => onChange(e.target.value)}
-              className="h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-700"
             />
-            <span className="text-sm text-zinc-700 dark:text-zinc-300">
-              {option.label}
-            </span>
-          </label>
+            <StyledRadio $checked={value === option.value} />
+            <span>{option.label}</span>
+          </RadioLabel>
         ))}
-      </div>
-    </div>
+      </OptionsContainer>
+    </RadioGroupWrapper>
   );
 }
