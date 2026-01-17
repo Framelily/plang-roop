@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styled, { keyframes, css } from 'styled-components';
+import { useTranslations } from 'next-intl';
 import ImageQueue from '@/components/ImageQueue';
 import BatchControls from '@/components/BatchControls';
 import ProgressBar from '@/components/ProgressBar';
@@ -520,6 +521,8 @@ const defaultOptions: BatchOptions = {
 
 export default function BatchPage() {
   const router = useRouter();
+  const t = useTranslations('batch');
+  const tc = useTranslations('common');
   const [images, setImages] = useState<ImageFile[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [options, setOptions] = useState<BatchOptions>(defaultOptions);
@@ -679,7 +682,7 @@ export default function BatchPage() {
   if (isLoading) {
     return (
       <LoadingContainer>
-        <LoadingText>LOADING...</LoadingText>
+        <LoadingText>{tc('loading')}...</LoadingText>
       </LoadingContainer>
     );
   }
@@ -703,21 +706,21 @@ export default function BatchPage() {
                   d="M15 19l-7-7 7-7"
                 />
               </BackIcon>
-              <BackText>BACK</BackText>
+              <BackText>{tc('back')}</BackText>
             </BackButton>
             <Divider />
-            <Title>BATCH EDITOR</Title>
+            <Title>{t('title')}</Title>
             <ImageCount>{images.length}</ImageCount>
           </HeaderLeft>
           <HeaderRight>
             {hasProcessedImages && (
               <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
-                Reset
+                {tc('reset')}
               </PixelButton>
             )}
             {allProcessed ? (
               <PixelButton $size="sm" onClick={handleDownloadZip}>
-                ZIP
+                {t('zip')}
               </PixelButton>
             ) : (
               <PixelButton
@@ -725,7 +728,7 @@ export default function BatchPage() {
                 onClick={handleProcess}
                 disabled={isProcessing || images.length === 0}
               >
-                {isProcessing ? 'Processing...' : 'Process All'}
+                {isProcessing ? tc('processing') : t('processAll')}
               </PixelButton>
             )}
           </HeaderRight>
@@ -735,7 +738,7 @@ export default function BatchPage() {
       <Main>
         {/* Selected Images */}
         <PixelCard>
-          <CardTitle>SELECTED IMAGES</CardTitle>
+          <CardTitle>{t('selectedImages')}</CardTitle>
 
           {images.length > 0 ? (
             <ImageQueueWrapper>
@@ -747,7 +750,7 @@ export default function BatchPage() {
               />
             </ImageQueueWrapper>
           ) : (
-            <EmptyText>NO IMAGES SELECTED. GO BACK TO SELECT IMAGES.</EmptyText>
+            <EmptyText>{t('noImages')}</EmptyText>
           )}
         </PixelCard>
 
@@ -758,7 +761,7 @@ export default function BatchPage() {
               <ProgressBar
                 current={progress.current}
                 total={progress.total}
-                label={progress.file ? `Processing: ${progress.file}` : 'Starting...'}
+                label={progress.file ? t('processingLabel', { file: progress.file }) : t('starting')}
               />
             </ProgressBarWrapper>
           </ProgressCard>
@@ -781,18 +784,18 @@ export default function BatchPage() {
             {/* Stats */}
             {hasProcessedImages && (
               <StatsCard>
-                <CardSubtitle>BATCH STATS</CardSubtitle>
+                <CardSubtitle>{t('batchStats')}</CardSubtitle>
                 <InfoList>
                   <InfoRow>
-                    <InfoLabel>Total Original</InfoLabel>
+                    <InfoLabel>{t('totalOriginal')}</InfoLabel>
                     <InfoValue>{formatFileSize(totalOriginalSize)}</InfoValue>
                   </InfoRow>
                   <InfoRow>
-                    <InfoLabel>Total Processed</InfoLabel>
+                    <InfoLabel>{t('totalProcessed')}</InfoLabel>
                     <InfoValue>{formatFileSize(totalProcessedSize)}</InfoValue>
                   </InfoRow>
                   <InfoRow>
-                    <InfoLabel>Saved</InfoLabel>
+                    <InfoLabel>{t('saved')}</InfoLabel>
                     <InfoValueGreen>
                       {totalProcessedSize < totalOriginalSize
                         ? `-${Math.round(((totalOriginalSize - totalProcessedSize) / totalOriginalSize) * 100)}%`
@@ -808,14 +811,14 @@ export default function BatchPage() {
           <PreviewColumn>
             <PixelCard>
               <PreviewHeader>
-                <CardTitle>PREVIEW</CardTitle>
+                <CardTitle>{t('preview')}</CardTitle>
                 {selectedImage?.processedImage && (
                   <PixelButton
                     $variant="outline"
                     $size="sm"
                     onClick={handleDownloadSingle}
                   >
-                    Download
+                    {tc('download')}
                   </PixelButton>
                 )}
               </PreviewHeader>
@@ -872,7 +875,7 @@ export default function BatchPage() {
                   </InfoGrid>
                 </div>
               ) : (
-                <EmptyPreview>SELECT AN IMAGE TO PREVIEW</EmptyPreview>
+                <EmptyPreview>{t('selectToPreview')}</EmptyPreview>
               )}
             </PixelCard>
           </PreviewColumn>

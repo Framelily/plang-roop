@@ -1,6 +1,7 @@
 'use client';
 
 import styled from 'styled-components';
+import { useTranslations } from 'next-intl';
 import { Input, Checkbox, RadioGroup, Slider } from '@/components/ui';
 import type { BatchOptions, ImageFormat } from '@/lib/types';
 import { FORMAT_LABELS, SUPPORTED_FORMATS } from '@/lib/types';
@@ -76,6 +77,7 @@ export default function BatchControls({
   originalWidth,
   originalHeight,
 }: BatchControlsProps) {
+  const t = useTranslations('batchControls');
   const handleWidthChange = (newWidth: number) => {
     if (options.keepAspectRatio && originalWidth && originalHeight) {
       const aspectRatio = originalWidth / originalHeight;
@@ -109,33 +111,33 @@ export default function BatchControls({
     <ControlsContainer>
       {/* Resize Section */}
       <Section>
-        <SectionTitle>Resize</SectionTitle>
+        <SectionTitle>{t('resize')}</SectionTitle>
         <FieldGroup>
           <Input
             id="batch-width"
             type="number"
-            label="Width"
+            label={t('width')}
             suffix="px"
             value={options.width || ''}
             onChange={(e) => handleWidthChange(Number(e.target.value) || 0)}
             min={0}
             max={10000}
-            placeholder="Original"
+            placeholder={t('original')}
           />
           <Input
             id="batch-height"
             type="number"
-            label="Height"
+            label={t('height')}
             suffix="px"
             value={options.height || ''}
             onChange={(e) => handleHeightChange(Number(e.target.value) || 0)}
             min={0}
             max={10000}
-            placeholder="Original"
+            placeholder={t('original')}
           />
           <Checkbox
             id="batch-keepRatio"
-            label="Keep aspect ratio"
+            label={t('keepAspectRatio')}
             checked={options.keepAspectRatio}
             onChange={(e) => onChange({ keepAspectRatio: e.target.checked })}
           />
@@ -146,11 +148,11 @@ export default function BatchControls({
 
       {/* Format Section */}
       <Section>
-        <SectionTitle>Output Format</SectionTitle>
+        <SectionTitle>{t('outputFormat')}</SectionTitle>
         <FieldGroup>
           <Checkbox
             id="batch-useOriginal"
-            label="Keep original format"
+            label={t('keepOriginalFormat')}
             checked={options.useOriginalFormat}
             onChange={(e) => onChange({ useOriginalFormat: e.target.checked })}
           />
@@ -169,7 +171,7 @@ export default function BatchControls({
 
       {/* Quality Section */}
       <Section>
-        <SectionTitle>Quality</SectionTitle>
+        <SectionTitle>{t('quality')}</SectionTitle>
         <Slider
           id="batch-quality"
           min={10}
@@ -179,7 +181,7 @@ export default function BatchControls({
           onChange={(e) => onChange({ quality: Number(e.target.value) / 100 })}
         />
         <HelpText>
-          Lower quality = smaller file size (affects JPG & WebP)
+          {t('qualityHelp')}
         </HelpText>
       </Section>
     </ControlsContainer>

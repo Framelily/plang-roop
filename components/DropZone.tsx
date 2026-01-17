@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import styled, { keyframes } from 'styled-components';
+import { useTranslations } from 'next-intl';
 import { ACCEPTED_FILE_TYPES, MAX_FILE_SIZE } from '@/lib/types';
 
 // Pixel Art Color Palette
@@ -159,6 +160,7 @@ export default function DropZone({
   disabled = false,
   compact = false,
 }: DropZoneProps) {
+  const t = useTranslations('dropzone');
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
@@ -197,7 +199,7 @@ export default function DropZone({
             d="M12 4v16m8-8H4"
           />
         </SmallIcon>
-        <CompactText>ADD MORE</CompactText>
+        <CompactText>{t('addMore')}</CompactText>
       </CompactContainer>
     );
   }
@@ -224,18 +226,18 @@ export default function DropZone({
 
       {isDragActive ? (
         <Title>
-          DROP {multiple ? 'FILES' : 'FILE'} HERE<BlinkingCursor>_</BlinkingCursor>
+          {multiple ? t('dropFiles') : t('dropFile')}<BlinkingCursor>_</BlinkingCursor>
         </Title>
       ) : (
         <>
           <Title>
-            DRAG & DROP {multiple ? 'IMAGES' : 'IMAGE'}
+            {multiple ? t('dragImages') : t('dragImage')}
           </Title>
           <Subtitle>
-            or click to select {multiple ? 'files' : 'a file'}
+            {multiple ? t('clickToSelectMultiple') : t('clickToSelect')}
           </Subtitle>
           <SupportText>
-            Supports: JPG, PNG, WebP (max 50MB)
+            {t('supports')}
           </SupportText>
         </>
       )}

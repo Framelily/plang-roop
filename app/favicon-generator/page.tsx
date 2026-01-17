@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styled, { keyframes, css } from 'styled-components';
+import { useTranslations } from 'next-intl';
 import DropZone from '@/components/DropZone';
 import ProgressBar from '@/components/ProgressBar';
 import FaviconPreview from '@/components/favicon/FaviconPreview';
@@ -519,6 +520,8 @@ interface ImageInfo {
 
 export default function FaviconGeneratorPage() {
   const router = useRouter();
+  const t = useTranslations('favicon');
+  const tc = useTranslations('common');
   const [imageInfo, setImageInfo] = useState<ImageInfo | null>(null);
   const [croppedUrl, setCroppedUrl] = useState<string | null>(null);
   const [favicons, setFavicons] = useState<GeneratedFavicon[]>([]);
@@ -553,7 +556,7 @@ export default function FaviconGeneratorPage() {
     if (!imageInfo) return;
 
     setIsProcessing(true);
-    setProgress({ current: 0, total: FAVICON_SIZES.length, name: 'Preparing...' });
+    setProgress({ current: 0, total: FAVICON_SIZES.length, name: t('preparing') });
 
     try {
       // Fit to square first
@@ -625,19 +628,19 @@ export default function FaviconGeneratorPage() {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              BACK
+              {tc('back')}
             </BackButton>
             <Divider />
-            <Title>FAVICON GENERATOR</Title>
+            <Title>{t('title')}</Title>
           </HeaderLeft>
           <HeaderRight>
             {favicons.length > 0 && (
               <>
                 <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
-                  RESET
+                  {tc('reset')}
                 </PixelButton>
                 <PixelButton $size="sm" onClick={handleDownload}>
-                  DOWNLOAD ZIP
+                  {t('downloadZip')}
                 </PixelButton>
               </>
             )}
@@ -650,10 +653,10 @@ export default function FaviconGeneratorPage() {
           <UploadSection>
             <SectionHeader>
               <SectionTitle>
-                CREATE FAVICON PACKAGE<BlinkingCursor>_</BlinkingCursor>
+                {t('createTitle')}<BlinkingCursor>_</BlinkingCursor>
               </SectionTitle>
               <SectionSubtitle>
-                Upload an image to generate favicons for all platforms
+                {t('createSubtitle')}
               </SectionSubtitle>
             </SectionHeader>
 
@@ -662,7 +665,7 @@ export default function FaviconGeneratorPage() {
             </DropZoneWrapper>
 
             <PixelCard>
-              <CardTitle>WHAT YOU&apos;LL GET:</CardTitle>
+              <CardTitle>{t('whatYouGet')}</CardTitle>
               <FeatureList>
                 {FAVICON_SIZES.map((size) => (
                   <FeatureItem key={size.name}>
@@ -694,7 +697,7 @@ export default function FaviconGeneratorPage() {
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  manifest.json (PWA)
+                  {t('pwa')}
                 </FeatureItem>
                 <FeatureItem>
                   <svg
@@ -709,7 +712,7 @@ export default function FaviconGeneratorPage() {
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  HTML meta tags
+                  {t('htmlTags')}
                 </FeatureItem>
               </FeatureList>
             </PixelCard>
@@ -718,7 +721,7 @@ export default function FaviconGeneratorPage() {
           <EditorSection>
             <GridContainer>
               <PixelCard>
-                <CardTitle>SOURCE IMAGE</CardTitle>
+                <CardTitle>{t('sourceImage')}</CardTitle>
                 <ImagePreviewContainer>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <SourceImage
@@ -728,7 +731,7 @@ export default function FaviconGeneratorPage() {
                 </ImagePreviewContainer>
                 <ImageInfo>
                   {imageInfo.originalWidth} x {imageInfo.originalHeight}px
-                  {!isSquare && ' (will be fitted to square)'}
+                  {!isSquare && ` ${t('willBeFitted')}`}
                 </ImageInfo>
               </PixelCard>
 
@@ -743,7 +746,7 @@ export default function FaviconGeneratorPage() {
                   />
                 ) : (
                   <PlaceholderText>
-                    Click &quot;GENERATE FAVICONS&quot; to create icons<BlinkingCursor>_</BlinkingCursor>
+                    {t('clickToGenerate')}<BlinkingCursor>_</BlinkingCursor>
                   </PlaceholderText>
                 )}
               </PixelCard>
@@ -753,7 +756,7 @@ export default function FaviconGeneratorPage() {
               <SettingsContainer>
                 <InputWrapper>
                   <InputLabel htmlFor="siteName">
-                    SITE NAME (FOR MANIFEST.JSON)
+                    {t('siteName')}
                   </InputLabel>
                   <PixelInput
                     id="siteName"
@@ -768,15 +771,15 @@ export default function FaviconGeneratorPage() {
                       onClick={handleGenerate}
                       disabled={isProcessing}
                     >
-                      {isProcessing ? 'GENERATING...' : 'GENERATE FAVICONS'}
+                      {isProcessing ? t('generating') : t('generateButton')}
                     </PixelButton>
                   ) : (
                     <>
                       <PixelButton $variant="outline" onClick={handleReset}>
-                        START OVER
+                        {t('startOver')}
                       </PixelButton>
                       <PixelButton onClick={handleDownload}>
-                        DOWNLOAD ZIP
+                        {t('downloadZip')}
                       </PixelButton>
                     </>
                   )}
@@ -790,7 +793,7 @@ export default function FaviconGeneratorPage() {
                   <ProgressBar
                     current={progress.current}
                     total={progress.total}
-                    label={`Generating: ${progress.name}`}
+                    label={t('generatingLabel', { name: progress.name })}
                   />
                 </ProgressContainer>
               </PixelCard>
@@ -802,7 +805,7 @@ export default function FaviconGeneratorPage() {
                   <HtmlCodeToggle
                     onClick={() => setShowHtmlCode(!showHtmlCode)}
                   >
-                    <HtmlCodeTitle>HTML CODE</HtmlCodeTitle>
+                    <HtmlCodeTitle>{t('htmlCode')}</HtmlCodeTitle>
                     <ChevronIcon
                       $isOpen={showHtmlCode}
                       fill="none"
@@ -829,7 +832,7 @@ export default function FaviconGeneratorPage() {
                           navigator.clipboard.writeText(generateHtmlTags());
                         }}
                       >
-                        COPY TO CLIPBOARD
+                        {t('copyToClipboard')}
                       </CopyButton>
                     </HtmlCodeContent>
                   )}

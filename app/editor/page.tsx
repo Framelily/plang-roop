@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styled, { keyframes, css } from 'styled-components';
+import { useTranslations } from 'next-intl';
 import ImagePreview from '@/components/ImagePreview';
 import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { processImage } from '@/lib/image/resize';
@@ -800,6 +801,8 @@ function CustomSlider({ id, min, max, step, value, onChange }: CustomSliderProps
 
 export default function EditorPage() {
   const router = useRouter();
+  const t = useTranslations('editor');
+  const tc = useTranslations('common');
   const [imageInfo, setImageInfo] = useState<StoredImageInfo | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -922,7 +925,7 @@ export default function EditorPage() {
   if (isLoading) {
     return (
       <LoadingContainer>
-        <LoadingText>LOADING<BlinkingCursor>_</BlinkingCursor></LoadingText>
+        <LoadingText>{tc('loading')}<BlinkingCursor>_</BlinkingCursor></LoadingText>
       </LoadingContainer>
     );
   }
@@ -954,22 +957,22 @@ export default function EditorPage() {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              <span>BACK</span>
+              <span>{tc('back')}</span>
             </BackButton>
             <Divider />
-            <Title>EDITOR</Title>
+            <Title>{t('title')}</Title>
           </HeaderLeft>
           <HeaderRight>
             <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
-              Reset
+              {tc('reset')}
             </PixelButton>
             {processedImage ? (
               <PixelButton $size="sm" onClick={handleDownload}>
-                Download
+                {tc('download')}
               </PixelButton>
             ) : (
               <PixelButton $size="sm" onClick={handleProcess} disabled={isProcessing}>
-                {isProcessing ? '...' : 'GO'}
+                {isProcessing ? '...' : tc('go')}
               </PixelButton>
             )}
           </HeaderRight>
@@ -982,12 +985,12 @@ export default function EditorPage() {
           <Card>
             {/* Resize Section */}
             <div>
-              <SectionTitle>RESIZE</SectionTitle>
+              <SectionTitle>{t('resize')}</SectionTitle>
               <InputGroup>
                 <CustomInput
                   id="width"
                   type="number"
-                  label="Width"
+                  label={t('width')}
                   suffix="px"
                   value={width}
                   onChange={(e) => handleWidthChange(Number(e.target.value))}
@@ -997,7 +1000,7 @@ export default function EditorPage() {
                 <CustomInput
                   id="height"
                   type="number"
-                  label="Height"
+                  label={t('height')}
                   suffix="px"
                   value={height}
                   onChange={(e) => handleHeightChange(Number(e.target.value))}
@@ -1008,7 +1011,7 @@ export default function EditorPage() {
               <div style={{ marginTop: '12px' }}>
                 <CustomCheckbox
                   id="keepRatio"
-                  label="Keep aspect ratio"
+                  label={t('keepAspectRatio')}
                   checked={keepAspectRatio}
                   onChange={(e) => setKeepAspectRatio(e.target.checked)}
                 />
@@ -1019,7 +1022,7 @@ export default function EditorPage() {
 
             {/* Format Section */}
             <div>
-              <SectionTitle>OUTPUT FORMAT</SectionTitle>
+              <SectionTitle>{t('outputFormat')}</SectionTitle>
               <CustomRadioGroup
                 name="format"
                 value={format}
@@ -1036,7 +1039,7 @@ export default function EditorPage() {
 
             {/* Quality Section */}
             <div>
-              <SectionTitle>QUALITY</SectionTitle>
+              <SectionTitle>{t('quality')}</SectionTitle>
               <CustomSlider
                 id="quality"
                 min={10}
@@ -1046,7 +1049,7 @@ export default function EditorPage() {
                 onChange={(e) => setQuality(Number(e.target.value))}
               />
               <HelpText>
-                Lower quality = smaller file size (JPG & WebP)
+                {t('qualityHelp')}
               </HelpText>
             </div>
 
@@ -1055,15 +1058,15 @@ export default function EditorPage() {
               <>
                 <SectionDivider />
                 <div>
-                  <SectionTitle>PRIVACY</SectionTitle>
+                  <SectionTitle>{t('privacy')}</SectionTitle>
                   <CustomCheckbox
                     id="stripExif"
-                    label="Strip EXIF metadata"
+                    label={t('stripExif')}
                     checked={stripExif}
                     onChange={(e) => setStripExif(e.target.checked)}
                   />
                   <HelpText>
-                    Removes location, camera info, etc.
+                    {t('stripExifHelp')}
                   </HelpText>
                 </div>
               </>
@@ -1074,16 +1077,16 @@ export default function EditorPage() {
             {/* Info Section */}
             <InfoGrid>
               <InfoBlock>
-                <InfoTitle>ORIGINAL</InfoTitle>
+                <InfoTitle>{t('original')}</InfoTitle>
                 <InfoList>
                   <InfoRow>
-                    <InfoLabel>DIM</InfoLabel>
+                    <InfoLabel>{t('dim')}</InfoLabel>
                     <InfoValue>
                       {imageInfo.originalWidth}x{imageInfo.originalHeight}
                     </InfoValue>
                   </InfoRow>
                   <InfoRow>
-                    <InfoLabel>SIZE</InfoLabel>
+                    <InfoLabel>{t('size')}</InfoLabel>
                     <InfoValue>
                       {formatFileSize(imageInfo.size)}
                     </InfoValue>
@@ -1094,22 +1097,22 @@ export default function EditorPage() {
               {/* Processed Info */}
               {processedImage && (
                 <InfoBlock>
-                  <InfoTitle>PROCESSED</InfoTitle>
+                  <InfoTitle>{t('processed')}</InfoTitle>
                   <InfoList>
                     <InfoRow>
-                      <InfoLabel>DIM</InfoLabel>
+                      <InfoLabel>{t('dim')}</InfoLabel>
                       <InfoValue>
                         {processedImage.width}x{processedImage.height}
                       </InfoValue>
                     </InfoRow>
                     <InfoRow>
-                      <InfoLabel>SIZE</InfoLabel>
+                      <InfoLabel>{t('size')}</InfoLabel>
                       <InfoValue>
                         {formatFileSize(processedImage.size)}
                       </InfoValue>
                     </InfoRow>
                     <InfoRow>
-                      <InfoLabel>SAVED</InfoLabel>
+                      <InfoLabel>{t('saved')}</InfoLabel>
                       <SavedValue $positive={processedImage.size < imageInfo.size}>
                         {processedImage.size < imageInfo.size
                           ? `-${Math.round(((imageInfo.size - processedImage.size) / imageInfo.size) * 100)}%`
@@ -1128,7 +1131,7 @@ export default function EditorPage() {
           <PreviewCard>
             <PreviewHeader>
               <PreviewTitle>
-                {processedImage ? 'PROCESSED' : 'ORIGINAL'}
+                {processedImage ? t('processed') : t('original')}
               </PreviewTitle>
               <PreviewInfo>
                 {displayWidth}x{displayHeight} | {formatFileSize(displaySize)}

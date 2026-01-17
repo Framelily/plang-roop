@@ -5,7 +5,9 @@ import { useCallback, useState } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { ConfigProvider, Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
+import { useTranslations } from 'next-intl';
 import DropZone from '@/components/DropZone';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 // Pixel Art Color Palette
 const colors = {
@@ -109,53 +111,121 @@ const HeaderContent = styled.div`
   justify-content: space-between;
 `;
 
+const logoPulse = keyframes`
+  0%, 100% {
+    filter: drop-shadow(0 0 8px ${colors.neonCyan}) drop-shadow(0 0 15px ${colors.neonPink}40);
+  }
+  50% {
+    filter: drop-shadow(0 0 12px ${colors.neonCyan}) drop-shadow(0 0 25px ${colors.neonPink}60);
+  }
+`;
+
+const glitchEffect = keyframes`
+  0%, 90%, 100% {
+    transform: translate(0);
+  }
+  92% {
+    transform: translate(-2px, 1px);
+  }
+  94% {
+    transform: translate(2px, -1px);
+  }
+  96% {
+    transform: translate(-1px, -1px);
+  }
+  98% {
+    transform: translate(1px, 1px);
+  }
+`;
+
 const Logo = styled.div`
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.02);
+  }
 `;
 
 const PixelIcon = styled.div`
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, ${colors.neonPink}, ${colors.primary});
+  width: 40px;
+  height: 40px;
   position: relative;
+  animation: ${logoPulse} 3s ease-in-out infinite;
 
-  /* Pixel corners */
-  clip-path: polygon(
-    0% 25%, 25% 25%, 25% 0%,
-    75% 0%, 75% 25%, 100% 25%,
-    100% 75%, 75% 75%, 75% 100%,
-    25% 100%, 25% 75%, 0% 75%
-  );
+  /* Outer pixel frame */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, ${colors.neonPink}, ${colors.primary}, ${colors.neonCyan});
+    clip-path: polygon(
+      0% 20%, 20% 20%, 20% 0%,
+      80% 0%, 80% 20%, 100% 20%,
+      100% 80%, 80% 80%, 80% 100%,
+      20% 100%, 20% 80%, 0% 80%
+    );
+  }
 
+  /* Inner dark area */
   &::after {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 12px;
-    height: 12px;
+    inset: 4px;
     background: ${colors.bg};
+    clip-path: polygon(
+      0% 20%, 20% 20%, 20% 0%,
+      80% 0%, 80% 20%, 100% 20%,
+      100% 80%, 80% 80%, 80% 100%,
+      20% 100%, 20% 80%, 0% 80%
+    );
+  }
+
+  svg {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    color: ${colors.neonCyan};
   }
 `;
 
 const LogoText = styled.div`
   h1 {
     font-family: var(--font-pixel);
-    font-size: 0.875rem;
-    color: ${colors.neonCyan};
-    text-shadow: 0 0 10px ${colors.neonCyan};
+    font-size: 0.75rem;
+    background: linear-gradient(90deg, ${colors.neonCyan}, ${colors.neonPink}, ${colors.neonCyan});
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: ${glitchEffect} 5s ease-in-out infinite;
     margin: 0;
     letter-spacing: 2px;
+
+    @media (min-width: 640px) {
+      font-size: 0.875rem;
+    }
   }
 
   p {
     font-family: var(--font-terminal);
-    font-size: 0.875rem;
-    color: ${colors.textMuted};
+    font-size: 0.75rem;
+    color: ${colors.neonGreen};
     margin: 0.25rem 0 0;
+
+    &::before {
+      content: '> ';
+      color: ${colors.neonPink};
+    }
+
+    @media (min-width: 640px) {
+      font-size: 0.875rem;
+    }
   }
 `;
 
@@ -354,6 +424,7 @@ const FooterText = styled.p`
 
 export default function Home() {
   const router = useRouter();
+  const t = useTranslations('home');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>('single');
@@ -383,22 +454,22 @@ export default function Home() {
             router.push('/editor');
           };
           img.onerror = () => {
-            setError('Failed to load image. Please try another file.');
+            setError(t('errorLoad'));
             setIsLoading(false);
           };
           img.src = reader.result as string;
         };
         reader.onerror = () => {
-          setError('Failed to read file. Please try again.');
+          setError(t('errorRead'));
           setIsLoading(false);
         };
         reader.readAsDataURL(file);
       } catch (err) {
-        setError('An error occurred. Please try again.');
+        setError(t('errorGeneral'));
         setIsLoading(false);
       }
     },
-    [router]
+    [router, t]
   );
 
   // Multiple files handler
@@ -448,11 +519,11 @@ export default function Home() {
         sessionStorage.setItem('batchImages', JSON.stringify(imageDataArray));
         router.push('/batch');
       } catch (err) {
-        setError('Failed to load some images. Please try again.');
+        setError(t('errorBatch'));
         setIsLoading(false);
       }
     },
-    [router]
+    [router, t]
   );
 
   return (
@@ -469,21 +540,21 @@ export default function Home() {
         <Header>
           <HeaderContent>
             <Logo>
-              <PixelIcon />
               <LogoText>
                 <h1>PLANG-ROOP</h1>
-                <p>[ IMAGE CONVERTER ]</p>
+                <p>{t('tagline')}</p>
               </LogoText>
             </Logo>
+            <LanguageSwitcher />
           </HeaderContent>
         </Header>
 
         <MainContent>
           <ContentWrapper>
             <HeroSection>
-              <HeroTitle>CONVERT & RESIZE</HeroTitle>
+              <HeroTitle>{t('heroTitle')}</HeroTitle>
               <HeroSubtitle>
-                Upload your images to resize, convert format, and download
+                {t('heroSubtitle')}
               </HeroSubtitle>
             </HeroSection>
 
@@ -492,13 +563,13 @@ export default function Home() {
                 $active={mode === 'single'}
                 onClick={() => setMode('single')}
               >
-                SINGLE
+                {t('modeSingle')}
               </ModeButton>
               <ModeButton
                 $active={mode === 'batch'}
                 onClick={() => setMode('batch')}
               >
-                BATCH
+                {t('modeBatch')}
               </ModeButton>
             </ModeToggle>
 
@@ -516,7 +587,7 @@ export default function Home() {
               <LoadingOverlay>
                 <LoadingText>
                   <Spin indicator={<LoadingOutlined style={{ fontSize: 20, color: colors.neonCyan }} spin />} />
-                  Loading {mode === 'batch' ? 'images' : 'image'}...
+                  {mode === 'batch' ? t('loadingImages') : t('loadingImage')}
                 </LoadingText>
               </LoadingOverlay>
             )}
@@ -526,34 +597,45 @@ export default function Home() {
             <FeaturesGrid>
               <FeatureCard>
                 <PixelFeatureIcon $color={colors.neonCyan}>
-                  <span style={{ fontSize: '16px' }}>+</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                  </svg>
                 </PixelFeatureIcon>
-                <FeatureTitle>RESIZE</FeatureTitle>
-                <FeatureDesc>Change dimensions</FeatureDesc>
+                <FeatureTitle>{t('featureResize')}</FeatureTitle>
+                <FeatureDesc>{t('featureResizeDesc')}</FeatureDesc>
               </FeatureCard>
               <FeatureCard>
                 <PixelFeatureIcon $color={colors.neonPink}>
-                  <span style={{ fontSize: '16px' }}>~</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" />
+                  </svg>
                 </PixelFeatureIcon>
-                <FeatureTitle>CONVERT</FeatureTitle>
-                <FeatureDesc>JPG, PNG, WebP</FeatureDesc>
+                <FeatureTitle>{t('featureConvert')}</FeatureTitle>
+                <FeatureDesc>{t('featureConvertDesc')}</FeatureDesc>
               </FeatureCard>
               <FeatureCard>
                 <PixelFeatureIcon $color={colors.neonGreen}>
-                  <span style={{ fontSize: '16px' }}>#</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                  </svg>
                 </PixelFeatureIcon>
-                <FeatureTitle>BATCH</FeatureTitle>
-                <FeatureDesc>Process multiple</FeatureDesc>
+                <FeatureTitle>{t('featureBatch')}</FeatureTitle>
+                <FeatureDesc>{t('featureBatchDesc')}</FeatureDesc>
               </FeatureCard>
               <FeatureCard
                 $clickable
                 onClick={() => router.push('/favicon-generator')}
               >
                 <PixelFeatureIcon $color={colors.primary}>
-                  <span style={{ fontSize: '16px' }}>*</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
                 </PixelFeatureIcon>
-                <FeatureTitle>FAVICON</FeatureTitle>
-                <FeatureDesc>Generate icons</FeatureDesc>
+                <FeatureTitle>{t('featureFavicon')}</FeatureTitle>
+                <FeatureDesc>{t('featureFaviconDesc')}</FeatureDesc>
               </FeatureCard>
             </FeaturesGrid>
           </ContentWrapper>
@@ -561,7 +643,7 @@ export default function Home() {
 
         <Footer>
           <FooterText>
-            All processing happens in your browser. No upload required.
+            {t('footer')}
           </FooterText>
         </Footer>
       </PageContainer>
