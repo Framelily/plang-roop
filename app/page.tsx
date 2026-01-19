@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { ConfigProvider, Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
@@ -52,6 +52,30 @@ const scanline = keyframes`
 const float = keyframes`
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
+`;
+
+const floatAround = keyframes`
+  0% { transform: translate(-40vw, -30vh) rotate(0deg); }
+  20% { transform: translate(30vw, -20vh) rotate(10deg); }
+  40% { transform: translate(35vw, 25vh) rotate(-5deg); }
+  60% { transform: translate(-30vw, 30vh) rotate(8deg); }
+  80% { transform: translate(-35vw, -10vh) rotate(-8deg); }
+  100% { transform: translate(-40vw, -30vh) rotate(0deg); }
+`;
+
+const FloatingHead = styled.img<{ $top: string; $left: string; $delay: string; $duration: string; $visible: boolean }>`
+  position: fixed;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  opacity: ${({ $visible }) => ($visible ? 0.15 : 0)};
+  pointer-events: none;
+  z-index: 1;
+  top: ${({ $top }) => $top};
+  left: ${({ $left }) => $left};
+  animation: ${floatAround} ${({ $duration }) => $duration} ease-in-out infinite;
+  animation-delay: ${({ $delay }) => $delay};
+  transition: opacity 1.5s ease-in-out;
 `;
 
 // Styled Components
@@ -310,13 +334,30 @@ const FeaturesGrid = styled.div`
 
 const FeatureCard = styled.div<{ $clickable?: boolean }>`
   background: ${colors.bgCard};
-  border: 3px solid ${colors.border};
+  border: 3px solid ${({ $clickable }) => ($clickable ? colors.cta : colors.border)};
   padding: 1rem;
   text-align: center;
   transition: all 0.2s;
   cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
   animation: ${float} 3s ease-in-out infinite;
   animation-delay: 0s;
+  position: relative;
+
+  ${({ $clickable }) =>
+    $clickable &&
+    css`
+      box-shadow: 0 0 8px ${colors.cta}40;
+
+      &::after {
+        content: '→';
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        color: ${colors.cta};
+        font-size: 0.875rem;
+        opacity: 0.8;
+      }
+    `}
 
   &:hover {
     ${({ $clickable }) =>
@@ -337,25 +378,19 @@ const FeatureCard = styled.div<{ $clickable?: boolean }>`
 `;
 
 const PixelFeatureIcon = styled.div<{ $color: string }>`
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   margin: 0 auto 0.5rem;
-  background: ${({ $color }) => $color};
-  position: relative;
-
-  /* Simple pixel style */
-  clip-path: polygon(
-    0% 25%, 25% 25%, 25% 0%,
-    75% 0%, 75% 25%, 100% 25%,
-    100% 75%, 75% 75%, 75% 100%,
-    25% 100%, 25% 75%, 0% 75%
-  );
-
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${colors.bg};
-  font-size: 20px;
+  color: ${({ $color }) => $color};
+
+  svg {
+    width: 32px;
+    height: 32px;
+    filter: drop-shadow(0 0 6px ${({ $color }) => $color}80);
+  }
 `;
 
 const FeatureTitle = styled.div`
@@ -382,7 +417,7 @@ const FooterText = styled.p`
   font-family: var(--font-terminal);
   font-size: 1rem;
   color: ${colors.textMuted};
-  margin: 0;
+  margin: 0 0 0.75rem;
 
   &::before {
     content: '> ';
@@ -390,11 +425,55 @@ const FooterText = styled.p`
   }
 `;
 
+const FooterCreator = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-terminal);
+  font-size: 0.875rem;
+  color: ${colors.textMuted};
+`;
+
+const CreatorImage = styled.img`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid ${colors.neonCyan};
+  box-shadow: 0 0 8px ${colors.neonCyan}60;
+`;
+
+const CreatorName = styled.span`
+  color: ${colors.neonCyan};
+  font-weight: bold;
+`;
+
 export default function Home() {
   const router = useRouter();
   const t = useTranslations('home');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showHead, setShowHead] = useState(false);
+
+  // Random floating head appearance
+  useEffect(() => {
+    const scheduleNext = () => {
+      // Random delay before showing (5-15 seconds)
+      const hideDelay = Math.random() * 10000 + 5000;
+      // Show duration (8-15 seconds)
+      const showDuration = Math.random() * 7000 + 8000;
+
+      setTimeout(() => {
+        setShowHead(true);
+        setTimeout(() => {
+          setShowHead(false);
+          scheduleNext();
+        }, showDuration);
+      }, hideDelay);
+    };
+
+    scheduleNext();
+  }, []);
 
   // Unified file handler - auto-detect single or batch
   const handleFiles = useCallback(
@@ -498,6 +577,9 @@ export default function Home() {
       }}
     >
       <PageContainer>
+        {/* Floating head easter egg */}
+        <FloatingHead src="/head.png" alt="" $top="50%" $left="50%" $delay="0s" $duration="25s" $visible={showHead} />
+
         <Header>
           <HeaderContent>
             <Logo>
@@ -537,43 +619,50 @@ export default function Home() {
             {error && <ErrorMessage>{error}</ErrorMessage>}
 
             <FeaturesGrid>
+              {/* RESIZE */}
               <FeatureCard>
                 <PixelFeatureIcon $color={colors.neonCyan}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M14 10h4v4" />
+                    <path d="M10 14H6v-4" />
                   </svg>
                 </PixelFeatureIcon>
                 <FeatureTitle>{t('featureResize')}</FeatureTitle>
                 <FeatureDesc>{t('featureResizeDesc')}</FeatureDesc>
               </FeatureCard>
+              {/* CONVERT */}
               <FeatureCard>
                 <PixelFeatureIcon $color={colors.neonPink}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1" />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12a9 9 0 1 1-9-9" />
+                    <path d="M21 3v9h-9" />
                   </svg>
                 </PixelFeatureIcon>
                 <FeatureTitle>{t('featureConvert')}</FeatureTitle>
                 <FeatureDesc>{t('featureConvertDesc')}</FeatureDesc>
               </FeatureCard>
+              {/* BATCH */}
               <FeatureCard>
                 <PixelFeatureIcon $color={colors.neonGreen}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="7" height="7" />
-                    <rect x="14" y="3" width="7" height="7" />
-                    <rect x="3" y="14" width="7" height="7" />
-                    <rect x="14" y="14" width="7" height="7" />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="8" y="8" width="13" height="13" rx="1" />
+                    <rect x="3" y="3" width="13" height="13" rx="1" />
                   </svg>
                 </PixelFeatureIcon>
                 <FeatureTitle>{t('featureBatch')}</FeatureTitle>
                 <FeatureDesc>{t('featureBatchDesc')}</FeatureDesc>
               </FeatureCard>
+              {/* FAVICON */}
               <FeatureCard
                 $clickable
                 onClick={() => router.push('/favicon-generator')}
               >
                 <PixelFeatureIcon $color={colors.primary}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                   </svg>
                 </PixelFeatureIcon>
                 <FeatureTitle>{t('featureFavicon')}</FeatureTitle>
@@ -587,6 +676,12 @@ export default function Home() {
           <FooterText>
             {t('footer')}
           </FooterText>
+          <FooterCreator>
+            <span>Made by</span>
+            <CreatorImage src="/head.png" alt="IT" />
+            <CreatorName>IT</CreatorName>
+            <span>× Generated with AI</span>
+          </FooterCreator>
         </Footer>
       </PageContainer>
     </ConfigProvider>
