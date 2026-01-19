@@ -10,6 +10,7 @@ import { processImage } from '@/lib/image/resize';
 import { downloadImage } from '@/lib/image/download';
 import { mayContainExif } from '@/lib/image/exif';
 import { formatFileSize, getFormatFromMimeType } from '@/lib/utils';
+import { getImageData, removeImageData, STORAGE_KEYS } from '@/lib/storage';
 import type { ImageFormat, ProcessedImage } from '@/lib/types';
 
 // Color Palette
@@ -819,23 +820,32 @@ export default function EditorPage() {
   const [processedImage, setProcessedImage] = useState<ProcessedImage | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Load image from sessionStorage
+  // Load image from IndexedDB (with sessionStorage fallback for metadata)
   useEffect(() => {
-    const storedInfo = sessionStorage.getItem('pendingImage');
-    const storedData = sessionStorage.getItem('pendingImageData');
+    const loadImage = async () => {
+      const storedInfo = sessionStorage.getItem('pendingImage');
+      if (!storedInfo) {
+        router.push('/');
+        return;
+      }
 
-    if (!storedInfo || !storedData) {
-      router.push('/');
-      return;
-    }
+      // Try IndexedDB first for image data
+      const storedData = await getImageData(STORAGE_KEYS.PENDING_IMAGE_DATA);
+      if (!storedData) {
+        router.push('/');
+        return;
+      }
 
-    const info: StoredImageInfo = JSON.parse(storedInfo);
-    setImageInfo(info);
-    setImageDataUrl(storedData);
-    setWidth(info.originalWidth);
-    setHeight(info.originalHeight);
-    setFormat(getFormatFromMimeType(info.type));
-    setIsLoading(false);
+      const info: StoredImageInfo = JSON.parse(storedInfo);
+      setImageInfo(info);
+      setImageDataUrl(storedData);
+      setWidth(info.originalWidth);
+      setHeight(info.originalHeight);
+      setFormat(getFormatFromMimeType(info.type));
+      setIsLoading(false);
+    };
+
+    loadImage();
   }, [router]);
 
   // Handle aspect ratio
@@ -910,9 +920,9 @@ export default function EditorPage() {
   }, [imageInfo, processedImage]);
 
   // Go back to home
-  const handleBack = useCallback(() => {
+  const handleBack = useCallback(async () => {
     sessionStorage.removeItem('pendingImage');
-    sessionStorage.removeItem('pendingImageData');
+    await removeImageData(STORAGE_KEYS.PENDING_IMAGE_DATA);
     if (processedImage?.url) {
       URL.revokeObjectURL(processedImage.url);
     }

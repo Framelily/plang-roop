@@ -12,6 +12,7 @@ import { createZipFromProcessedImages } from '@/lib/image/zip';
 import { downloadImage } from '@/lib/image/download';
 import { loadImage } from '@/lib/image/resize';
 import { formatFileSize, generateId } from '@/lib/utils';
+import { getImageData, removeImageData, STORAGE_KEYS } from '@/lib/storage';
 import type { ImageFile, BatchOptions, ImageFormat } from '@/lib/types';
 
 // Color Palette
@@ -530,10 +531,10 @@ export default function BatchPage() {
   const [progress, setProgress] = useState({ current: 0, total: 0, file: '' });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load images from sessionStorage
+  // Load images from IndexedDB
   useEffect(() => {
     const loadStoredImages = async () => {
-      const storedData = sessionStorage.getItem('batchImages');
+      const storedData = await getImageData(STORAGE_KEYS.BATCH_IMAGES);
 
       if (!storedData) {
         setIsLoading(false);
@@ -657,8 +658,8 @@ export default function BatchPage() {
   }, []);
 
   // Go back
-  const handleBack = useCallback(() => {
-    sessionStorage.removeItem('batchImages');
+  const handleBack = useCallback(async () => {
+    await removeImageData(STORAGE_KEYS.BATCH_IMAGES);
     router.push('/');
   }, [router]);
 

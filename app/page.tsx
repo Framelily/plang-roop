@@ -8,6 +8,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useTranslations } from 'next-intl';
 import DropZone from '@/components/DropZone';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { storeImageData, STORAGE_KEYS } from '@/lib/storage';
 
 // Pixel Art Color Palette
 const colors = {
@@ -487,34 +488,37 @@ export default function Home() {
         // Single file → go to editor
         if (files.length === 1) {
           const file = files[0];
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const img = new Image();
-            img.onload = () => {
-              sessionStorage.setItem(
-                'pendingImage',
-                JSON.stringify({
-                  name: file.name,
-                  originalWidth: img.naturalWidth,
-                  originalHeight: img.naturalHeight,
-                  size: file.size,
-                  type: file.type,
-                })
-              );
-              sessionStorage.setItem('pendingImageData', reader.result as string);
-              router.push('/editor');
-            };
-            img.onerror = () => {
-              setError(t('errorLoad'));
-              setIsLoading(false);
-            };
-            img.src = reader.result as string;
-          };
-          reader.onerror = () => {
-            setError(t('errorRead'));
-            setIsLoading(false);
-          };
-          reader.readAsDataURL(file);
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(file);
+          });
+
+          const dimensions = await new Promise<{ width: number; height: number }>(
+            (resolve, reject) => {
+              const img = new Image();
+              img.onload = () =>
+                resolve({ width: img.naturalWidth, height: img.naturalHeight });
+              img.onerror = () => reject(new Error('Failed to load image'));
+              img.src = dataUrl;
+            }
+          );
+
+          sessionStorage.setItem(
+            'pendingImage',
+            JSON.stringify({
+              name: file.name,
+              originalWidth: dimensions.width,
+              originalHeight: dimensions.height,
+              size: file.size,
+              type: file.type,
+            })
+          );
+
+          // Use IndexedDB for large image data (sessionStorage has ~5MB limit)
+          await storeImageData(STORAGE_KEYS.PENDING_IMAGE_DATA, dataUrl);
+          router.push('/editor');
         }
         // Multiple files → go to batch
         else {
@@ -555,7 +559,8 @@ export default function Home() {
             });
           }
 
-          sessionStorage.setItem('batchImages', JSON.stringify(imageDataArray));
+          // Use IndexedDB for large image data (sessionStorage has ~5MB limit)
+          await storeImageData(STORAGE_KEYS.BATCH_IMAGES, JSON.stringify(imageDataArray));
           router.push('/batch');
         }
       } catch (err) {
