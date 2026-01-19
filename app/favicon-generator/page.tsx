@@ -143,25 +143,36 @@ const HeaderContent = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
+  padding: 0.75rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  @media (min-width: 640px) {
+    padding: 1rem;
+    flex-wrap: nowrap;
+  }
 `;
 
 const HeaderLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
+
+  @media (min-width: 640px) {
+    gap: 1rem;
+  }
 `;
 
 const BackButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
   color: ${colors.textMuted};
   background: none;
   border: none;
   cursor: pointer;
   font-family: var(--font-terminal);
-  font-size: 1.25rem;
+  font-size: 1rem;
   transition: all 0.2s;
   padding: 0.5rem;
 
@@ -174,21 +185,44 @@ const BackButton = styled.button`
     width: 1.25rem;
     height: 1.25rem;
   }
+
+  span {
+    display: none;
+
+    @media (min-width: 480px) {
+      display: inline;
+    }
+  }
+
+  @media (min-width: 640px) {
+    font-size: 1.25rem;
+    gap: 0.5rem;
+  }
 `;
 
 const Divider = styled.div`
+  display: none;
   width: 4px;
   height: 1.5rem;
   background: ${colors.border};
+
+  @media (min-width: 480px) {
+    display: block;
+  }
 `;
 
 const Title = styled.h1`
   font-family: var(--font-pixel);
-  font-size: 0.875rem;
+  font-size: 0.625rem;
   color: ${colors.neonPink};
   text-shadow: 0 0 10px ${colors.neonPink}, 0 0 20px ${colors.neonPink};
   animation: ${glitch} 3s infinite;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+
+  @media (min-width: 480px) {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+  }
 
   @media (min-width: 640px) {
     font-size: 1rem;
@@ -263,9 +297,13 @@ const Main = styled.main`
   margin: 0 auto;
   width: 100%;
   flex: 1;
-  padding: 2rem 1rem;
+  padding: 1rem 0.75rem;
   position: relative;
   z-index: 1;
+
+  @media (min-width: 640px) {
+    padding: 2rem 1rem;
+  }
 `;
 
 const UploadSection = styled.div`
@@ -292,16 +330,25 @@ const SectionTitle = styled.h2`
 
 const SectionSubtitle = styled.p`
   font-family: var(--font-terminal);
-  font-size: 1.25rem;
+  font-size: 1rem;
   color: ${colors.textMuted};
+
+  @media (min-width: 640px) {
+    font-size: 1.25rem;
+  }
 `;
 
 const PixelCard = styled.div`
   background: ${colors.bgCard};
   border: 4px solid ${colors.border};
-  padding: 1rem;
+  padding: 0.75rem;
   position: relative;
-  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.5);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+
+  @media (min-width: 640px) {
+    padding: 1rem;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.5);
+  }
 
   &::before {
     content: '';
@@ -395,13 +442,22 @@ const PlaceholderText = styled.p`
 
 const SettingsContainer = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  flex-direction: column;
   gap: 1rem;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
 `;
 
 const InputWrapper = styled.div`
-  width: 16rem;
+  width: 100%;
+
+  @media (min-width: 640px) {
+    width: 16rem;
+  }
 `;
 
 const InputLabel = styled.label`
@@ -436,7 +492,22 @@ const PixelInput = styled.input`
 
 const ButtonGroup = styled.div`
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
+  width: 100%;
+
+  @media (min-width: 480px) {
+    flex-direction: row;
+    width: auto;
+  }
+
+  button {
+    width: 100%;
+
+    @media (min-width: 480px) {
+      width: auto;
+    }
+  }
 `;
 
 const ProgressContainer = styled.div`
@@ -482,15 +553,25 @@ const CodeBlock = styled.pre`
   overflow-x: auto;
   background: ${colors.bgLight};
   border: 2px solid ${colors.border};
-  padding: 1rem;
+  padding: 0.75rem;
   font-family: var(--font-terminal);
-  font-size: 1rem;
+  font-size: 0.75rem;
   color: ${colors.neonGreen};
   line-height: 1.5;
+
+  @media (min-width: 640px) {
+    padding: 1rem;
+    font-size: 1rem;
+  }
 `;
 
 const CopyButton = styled(PixelButton)`
   margin-top: 0.75rem;
+  width: 100%;
+
+  @media (min-width: 480px) {
+    width: auto;
+  }
 `;
 
 const DropZoneWrapper = styled.div`
@@ -620,7 +701,7 @@ export default function FaviconGeneratorPage() {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              {tc('back')}
+              <span>{tc('back')}</span>
             </BackButton>
             <Divider />
             <Title>{t('title')}</Title>
