@@ -3,6 +3,10 @@
 /* Enable class-based dark mode for Tailwind v4 */
 @custom-variant dark (&:where(.dark, .dark *));
 
+html {
+  font-size: 120%; /* Base 19.2px instead of 16px for better readability */
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -30,6 +34,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  font-size: 1rem; /* Ensures base text is readable */
+  line-height: 1.5;
 }
 
 /* Respect reduced motion preferences */

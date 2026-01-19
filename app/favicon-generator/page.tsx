@@ -551,8 +551,8 @@ export default function FaviconGeneratorPage() {
     reader.readAsDataURL(file);
   }, []);
 
-  // Generate favicons
-  const handleGenerate = useCallback(async () => {
+  // Generate favicons and download ZIP
+  const handleGenerateAndDownload = useCallback(async () => {
     if (!imageInfo) return;
 
     setIsProcessing(true);
@@ -576,23 +576,15 @@ export default function FaviconGeneratorPage() {
       );
 
       setFavicons(generatedFavicons);
+
+      // Auto-download ZIP after generating
+      await createFaviconZip(generatedFavicons, siteName);
     } catch (error) {
       console.error('Favicon generation error:', error);
     } finally {
       setIsProcessing(false);
     }
-  }, [imageInfo]);
-
-  // Download ZIP
-  const handleDownload = useCallback(async () => {
-    if (favicons.length === 0) return;
-
-    try {
-      await createFaviconZip(favicons, siteName);
-    } catch (error) {
-      console.error('ZIP creation error:', error);
-    }
-  }, [favicons, siteName]);
+  }, [imageInfo, siteName, t]);
 
   // Reset
   const handleReset = useCallback(() => {
@@ -635,14 +627,9 @@ export default function FaviconGeneratorPage() {
           </HeaderLeft>
           <HeaderRight>
             {favicons.length > 0 && (
-              <>
-                <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
-                  {tc('reset')}
-                </PixelButton>
-                <PixelButton $size="sm" onClick={handleDownload}>
-                  {t('downloadZip')}
-                </PixelButton>
-              </>
+              <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
+                {tc('reset')}
+              </PixelButton>
             )}
           </HeaderRight>
         </HeaderContent>
@@ -766,23 +753,17 @@ export default function FaviconGeneratorPage() {
                   />
                 </InputWrapper>
                 <ButtonGroup>
-                  {favicons.length === 0 ? (
-                    <PixelButton
-                      onClick={handleGenerate}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? t('generating') : t('generateButton')}
+                  {favicons.length > 0 && (
+                    <PixelButton $variant="outline" onClick={handleReset}>
+                      {t('startOver')}
                     </PixelButton>
-                  ) : (
-                    <>
-                      <PixelButton $variant="outline" onClick={handleReset}>
-                        {t('startOver')}
-                      </PixelButton>
-                      <PixelButton onClick={handleDownload}>
-                        {t('downloadZip')}
-                      </PixelButton>
-                    </>
                   )}
+                  <PixelButton
+                    onClick={handleGenerateAndDownload}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? t('generating') : t('downloadZip')}
+                  </PixelButton>
                 </ButtonGroup>
               </SettingsContainer>
             </PixelCard>

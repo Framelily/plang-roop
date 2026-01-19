@@ -861,8 +861,8 @@ export default function EditorPage() {
     [keepAspectRatio, imageInfo]
   );
 
-  // Process image
-  const handleProcess = useCallback(async () => {
+  // Process and download image in one step
+  const handleProcessAndDownload = useCallback(async () => {
     if (!imageDataUrl || !imageInfo) return;
 
     setIsProcessing(true);
@@ -886,18 +886,15 @@ export default function EditorPage() {
       }
 
       setProcessedImage(result);
+
+      // Auto-download after processing
+      downloadImage(result.blob, imageInfo.name, format);
     } catch (error) {
       console.error('Processing error:', error);
     } finally {
       setIsProcessing(false);
     }
   }, [imageDataUrl, imageInfo, width, height, keepAspectRatio, format, quality, processedImage]);
-
-  // Download processed image
-  const handleDownload = useCallback(() => {
-    if (!processedImage || !imageInfo) return;
-    downloadImage(processedImage.blob, imageInfo.name, format);
-  }, [processedImage, imageInfo, format]);
 
   // Reset to original
   const handleReset = useCallback(() => {
@@ -966,15 +963,9 @@ export default function EditorPage() {
             <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
               {tc('reset')}
             </PixelButton>
-            {processedImage ? (
-              <PixelButton $size="sm" onClick={handleDownload}>
-                {tc('download')}
-              </PixelButton>
-            ) : (
-              <PixelButton $size="sm" onClick={handleProcess} disabled={isProcessing}>
-                {isProcessing ? '...' : tc('go')}
-              </PixelButton>
-            )}
+            <PixelButton $size="sm" onClick={handleProcessAndDownload} disabled={isProcessing}>
+              {isProcessing ? '...' : tc('download')}
+            </PixelButton>
           </HeaderRight>
         </HeaderContent>
       </Header>

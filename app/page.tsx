@@ -28,7 +28,6 @@ const colors = {
   neonGreen: '#05FFA1',
 };
 
-type Mode = 'single' | 'batch';
 
 // Animations
 const blink = keyframes`
@@ -271,37 +270,6 @@ const HeroSubtitle = styled.p`
   margin: 0;
 `;
 
-const ModeToggle = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-`;
-
-const ModeButton = styled.button<{ $active: boolean }>`
-  font-family: var(--font-pixel);
-  font-size: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: ${({ $active }) => ($active ? colors.primary : colors.bgCard)};
-  color: ${({ $active }) => ($active ? colors.bg : colors.text)};
-  border: 2px solid ${({ $active }) => ($active ? colors.primary : colors.border)};
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: ${({ $active }) =>
-    $active
-      ? `0 0 15px ${colors.primary}80`
-      : `3px 3px 0 ${colors.border}`};
-
-  &:hover {
-    background: ${({ $active }) => ($active ? colors.primary : colors.bgLight)};
-    border-color: ${colors.primary};
-  }
-
-  &:active {
-    transform: translate(2px, 2px);
-    box-shadow: none;
-  }
-`;
 
 const LoadingOverlay = styled.div`
   margin-top: 1rem;
@@ -427,97 +395,90 @@ export default function Home() {
   const t = useTranslations('home');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>('single');
 
-  // Single file handler
-  const handleSingleFile = useCallback(
-    async (file: File) => {
+  // Unified file handler - auto-detect single or batch
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) return;
+
       setIsLoading(true);
       setError(null);
 
       try {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const img = new Image();
-          img.onload = () => {
-            sessionStorage.setItem(
-              'pendingImage',
-              JSON.stringify({
-                name: file.name,
-                originalWidth: img.naturalWidth,
-                originalHeight: img.naturalHeight,
-                size: file.size,
-                type: file.type,
-              })
-            );
-            sessionStorage.setItem('pendingImageData', reader.result as string);
-            router.push('/editor');
+        // Single file → go to editor
+        if (files.length === 1) {
+          const file = files[0];
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const img = new Image();
+            img.onload = () => {
+              sessionStorage.setItem(
+                'pendingImage',
+                JSON.stringify({
+                  name: file.name,
+                  originalWidth: img.naturalWidth,
+                  originalHeight: img.naturalHeight,
+                  size: file.size,
+                  type: file.type,
+                })
+              );
+              sessionStorage.setItem('pendingImageData', reader.result as string);
+              router.push('/editor');
+            };
+            img.onerror = () => {
+              setError(t('errorLoad'));
+              setIsLoading(false);
+            };
+            img.src = reader.result as string;
           };
-          img.onerror = () => {
-            setError(t('errorLoad'));
+          reader.onerror = () => {
+            setError(t('errorRead'));
             setIsLoading(false);
           };
-          img.src = reader.result as string;
-        };
-        reader.onerror = () => {
-          setError(t('errorRead'));
-          setIsLoading(false);
-        };
-        reader.readAsDataURL(file);
-      } catch (err) {
-        setError(t('errorGeneral'));
-        setIsLoading(false);
-      }
-    },
-    [router, t]
-  );
-
-  // Multiple files handler
-  const handleMultipleFiles = useCallback(
-    async (files: File[]) => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const imageDataArray: Array<{
-          name: string;
-          originalWidth: number;
-          originalHeight: number;
-          size: number;
-          type: string;
-          dataUrl: string;
-        }> = [];
-
-        for (const file of files) {
-          const dataUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-
-          const dimensions = await new Promise<{ width: number; height: number }>(
-            (resolve, reject) => {
-              const img = new Image();
-              img.onload = () =>
-                resolve({ width: img.naturalWidth, height: img.naturalHeight });
-              img.onerror = reject;
-              img.src = dataUrl;
-            }
-          );
-
-          imageDataArray.push({
-            name: file.name,
-            originalWidth: dimensions.width,
-            originalHeight: dimensions.height,
-            size: file.size,
-            type: file.type,
-            dataUrl,
-          });
+          reader.readAsDataURL(file);
         }
+        // Multiple files → go to batch
+        else {
+          const imageDataArray: Array<{
+            name: string;
+            originalWidth: number;
+            originalHeight: number;
+            size: number;
+            type: string;
+            dataUrl: string;
+          }> = [];
 
-        sessionStorage.setItem('batchImages', JSON.stringify(imageDataArray));
-        router.push('/batch');
+          for (const file of files) {
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+
+            const dimensions = await new Promise<{ width: number; height: number }>(
+              (resolve, reject) => {
+                const img = new Image();
+                img.onload = () =>
+                  resolve({ width: img.naturalWidth, height: img.naturalHeight });
+                img.onerror = reject;
+                img.src = dataUrl;
+              }
+            );
+
+            imageDataArray.push({
+              name: file.name,
+              originalWidth: dimensions.width,
+              originalHeight: dimensions.height,
+              size: file.size,
+              type: file.type,
+              dataUrl,
+            });
+          }
+
+          sessionStorage.setItem('batchImages', JSON.stringify(imageDataArray));
+          router.push('/batch');
+        }
       } catch (err) {
         setError(t('errorBatch'));
         setIsLoading(false);
@@ -558,36 +519,17 @@ export default function Home() {
               </HeroSubtitle>
             </HeroSection>
 
-            <ModeToggle>
-              <ModeButton
-                $active={mode === 'single'}
-                onClick={() => setMode('single')}
-              >
-                {t('modeSingle')}
-              </ModeButton>
-              <ModeButton
-                $active={mode === 'batch'}
-                onClick={() => setMode('batch')}
-              >
-                {t('modeBatch')}
-              </ModeButton>
-            </ModeToggle>
-
-            {mode === 'single' ? (
-              <DropZone onFileSelect={handleSingleFile} disabled={isLoading} />
-            ) : (
-              <DropZone
-                onFilesSelect={handleMultipleFiles}
-                multiple
-                disabled={isLoading}
-              />
-            )}
+            <DropZone
+              onFilesSelect={handleFiles}
+              multiple
+              disabled={isLoading}
+            />
 
             {isLoading && (
               <LoadingOverlay>
                 <LoadingText>
                   <Spin indicator={<LoadingOutlined style={{ fontSize: 20, color: colors.neonCyan }} spin />} />
-                  {mode === 'batch' ? t('loadingImages') : t('loadingImage')}
+                  {t('loadingImages')}
                 </LoadingText>
               </LoadingOverlay>
             )}

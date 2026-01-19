@@ -591,8 +591,8 @@ export default function BatchPage() {
     setOptions((prev) => ({ ...prev, ...newOptions }));
   }, []);
 
-  // Process all images
-  const handleProcess = useCallback(async () => {
+  // Process all images and download ZIP
+  const handleProcessAndDownload = useCallback(async () => {
     if (images.length === 0) return;
 
     setIsProcessing(true);
@@ -621,24 +621,18 @@ export default function BatchPage() {
       );
 
       setImages(results);
+
+      // Auto-download ZIP after processing
+      const processedImages = results.filter((img) => img.processedImage);
+      if (processedImages.length > 0) {
+        await createZipFromProcessedImages(processedImages);
+      }
     } catch (error) {
       console.error('Batch processing error:', error);
     } finally {
       setIsProcessing(false);
     }
   }, [images, options]);
-
-  // Download all as ZIP
-  const handleDownloadZip = useCallback(async () => {
-    const processedImages = images.filter((img) => img.processedImage);
-    if (processedImages.length === 0) return;
-
-    try {
-      await createZipFromProcessedImages(processedImages);
-    } catch (error) {
-      console.error('ZIP creation error:', error);
-    }
-  }, [images]);
 
   // Download single image
   const handleDownloadSingle = useCallback(() => {
@@ -718,19 +712,13 @@ export default function BatchPage() {
                 {tc('reset')}
               </PixelButton>
             )}
-            {allProcessed ? (
-              <PixelButton $size="sm" onClick={handleDownloadZip}>
-                {t('zip')}
-              </PixelButton>
-            ) : (
-              <PixelButton
-                $size="sm"
-                onClick={handleProcess}
-                disabled={isProcessing || images.length === 0}
-              >
-                {isProcessing ? tc('processing') : t('processAll')}
-              </PixelButton>
-            )}
+            <PixelButton
+              $size="sm"
+              onClick={handleProcessAndDownload}
+              disabled={isProcessing || images.length === 0}
+            >
+              {isProcessing ? tc('processing') : tc('download')}
+            </PixelButton>
           </HeaderRight>
         </HeaderContent>
       </Header>

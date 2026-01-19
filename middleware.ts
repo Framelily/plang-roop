@@ -5,20 +5,10 @@ import { defaultLocale, locales, type Locale } from './i18n/config';
 export function middleware(request: NextRequest) {
   const localeCookie = request.cookies.get('NEXT_LOCALE')?.value;
 
-  // If no locale cookie, detect from Accept-Language header or use default
+  // If no locale cookie, use default locale (English)
   if (!localeCookie) {
-    const acceptLanguage = request.headers.get('Accept-Language');
-    let detectedLocale: Locale = defaultLocale;
-
-    if (acceptLanguage) {
-      // Check if Thai is preferred
-      if (acceptLanguage.includes('th')) {
-        detectedLocale = 'th';
-      }
-    }
-
     const response = NextResponse.next();
-    response.cookies.set('NEXT_LOCALE', detectedLocale, {
+    response.cookies.set('NEXT_LOCALE', defaultLocale, {
       path: '/',
       maxAge: 60 * 60 * 24 * 365, // 1 year
     });
