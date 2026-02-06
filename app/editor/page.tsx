@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styled, { keyframes, css } from 'styled-components';
 import { useTranslations } from 'next-intl';
-import ImagePreview from '@/components/ImagePreview';
-import { useImageProcessor } from '@/hooks/useImageProcessor';
+import { useDebounce } from '@/hooks/useDebounce';
 import { processImage } from '@/lib/image/resize';
 import { downloadImage } from '@/lib/image/download';
 import { mayContainExif } from '@/lib/image/exif';
@@ -621,6 +620,7 @@ const PreviewContainer = styled.div`
   background-color: ${colors.bg};
   border: 3px solid ${colors.border};
   padding: 8px;
+  position: relative;
 
   @media (min-width: 640px) {
     padding: 16px;
@@ -640,6 +640,42 @@ const PreviewImage = styled.img`
   @media (min-width: 1024px) {
     max-height: 500px;
   }
+`;
+
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
+const ProcessingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(15, 15, 35, 0.75);
+  z-index: 10;
+  gap: 12px;
+`;
+
+const ProcessingSpinner = styled.div`
+  width: 40px;
+  height: 40px;
+  border: 4px solid ${colors.border};
+  border-top: 4px solid ${colors.neonCyan};
+  animation: ${spin} 0.8s linear infinite;
+`;
+
+const ProcessingLabel = styled.span`
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: ${colors.neonCyan};
+  text-shadow: 0 0 10px ${colors.neonCyan};
+  letter-spacing: 2px;
 `;
 
 const FileName = styled.p`
@@ -691,7 +727,7 @@ interface CustomInputProps {
   type?: string;
   label: string;
   suffix?: string;
-  value: number;
+  value: number | string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   min?: number;
   max?: number;
@@ -818,7 +854,21 @@ export default function EditorPage() {
 
   // Processing state
   const [processedImage, setProcessedImage] = useState<ProcessedImage | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [lastProcessedKey, setLastProcessedKey] = useState('');
+  const processCounterRef = useRef(0);
+
+  // Debounced values for auto-preview
+  const debouncedWidth = useDebounce(width, 500);
+  const debouncedHeight = useDebounce(height, 500);
+  const debouncedFormat = useDebounce(format, 300);
+  const debouncedQuality = useDebounce(quality, 500);
+
+  // Derive processing state — all from state/props, no refs read during render
+  const isDebouncing = width !== debouncedWidth || height !== debouncedHeight ||
+    format !== debouncedFormat || quality !== debouncedQuality;
+  const currentSettingsKey = `${debouncedWidth}-${debouncedHeight}-${debouncedFormat}-${debouncedQuality}-${keepAspectRatio}`;
+  const isPreviewProcessing = isDebouncing ||
+    (!!imageDataUrl && !isLoading && currentSettingsKey !== lastProcessedKey);
 
   // Load image from IndexedDB (with sessionStorage fallback for metadata)
   useEffect(() => {
@@ -871,40 +921,50 @@ export default function EditorPage() {
     [keepAspectRatio, imageInfo]
   );
 
-  // Process and download image in one step
-  const handleProcessAndDownload = useCallback(async () => {
-    if (!imageDataUrl || !imageInfo) return;
+  // Auto-preview: re-process whenever debounced settings change
+  useEffect(() => {
+    if (!imageDataUrl || !imageInfo || isLoading) return;
+    if (debouncedWidth <= 0 || debouncedHeight <= 0) return;
 
-    setIsProcessing(true);
-    try {
-      const result = await processImage(
-        imageDataUrl,
-        imageInfo.originalWidth,
-        imageInfo.originalHeight,
-        {
-          width,
-          height,
-          keepAspectRatio,
-          format,
-          quality: quality / 100,
-        }
-      );
+    const settingsKey = `${debouncedWidth}-${debouncedHeight}-${debouncedFormat}-${debouncedQuality}-${keepAspectRatio}`;
+    const currentCount = ++processCounterRef.current;
 
-      // Clean up previous processed image
-      if (processedImage?.url) {
-        URL.revokeObjectURL(processedImage.url);
+    processImage(
+      imageDataUrl,
+      imageInfo.originalWidth,
+      imageInfo.originalHeight,
+      {
+        width: debouncedWidth,
+        height: debouncedHeight,
+        keepAspectRatio,
+        format: debouncedFormat,
+        quality: debouncedQuality / 100,
       }
+    )
+      .then((result) => {
+        // Stale guard: only apply if this is still the latest request
+        if (processCounterRef.current !== currentCount) {
+          URL.revokeObjectURL(result.url);
+          return;
+        }
+        setLastProcessedKey(settingsKey);
+        setProcessedImage((prev) => {
+          if (prev?.url) URL.revokeObjectURL(prev.url);
+          return result;
+        });
+      })
+      .catch((error) => {
+        if (processCounterRef.current === currentCount) {
+          console.error('Preview processing error:', error);
+        }
+      });
+  }, [imageDataUrl, imageInfo, isLoading, debouncedWidth, debouncedHeight, debouncedFormat, debouncedQuality, keepAspectRatio]);
 
-      setProcessedImage(result);
-
-      // Auto-download after processing
-      downloadImage(result.blob, imageInfo.name, format);
-    } catch (error) {
-      console.error('Processing error:', error);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [imageDataUrl, imageInfo, width, height, keepAspectRatio, format, quality, processedImage]);
+  // Download the already-processed image
+  const handleDownload = useCallback(() => {
+    if (!processedImage || !imageInfo) return;
+    downloadImage(processedImage.blob, imageInfo.name, format);
+  }, [processedImage, imageInfo, format]);
 
   // Reset to original
   const handleReset = useCallback(() => {
@@ -912,6 +972,9 @@ export default function EditorPage() {
       setWidth(imageInfo.originalWidth);
       setHeight(imageInfo.originalHeight);
       setFormat(getFormatFromMimeType(imageInfo.type));
+      setQuality(90);
+      setKeepAspectRatio(true);
+      setLastProcessedKey('');
       if (processedImage?.url) {
         URL.revokeObjectURL(processedImage.url);
       }
@@ -973,8 +1036,8 @@ export default function EditorPage() {
             <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
               {tc('reset')}
             </PixelButton>
-            <PixelButton $size="sm" onClick={handleProcessAndDownload} disabled={isProcessing}>
-              {isProcessing ? '...' : tc('download')}
+            <PixelButton $size="sm" onClick={handleDownload} disabled={!processedImage || isPreviewProcessing}>
+              {isPreviewProcessing ? '...' : tc('download')}
             </PixelButton>
           </HeaderRight>
         </HeaderContent>
@@ -993,8 +1056,8 @@ export default function EditorPage() {
                   type="number"
                   label={t('width')}
                   suffix="px"
-                  value={width}
-                  onChange={(e) => handleWidthChange(Number(e.target.value))}
+                  value={width || ''}
+                  onChange={(e) => handleWidthChange(Number(e.target.value) || 0)}
                   min={1}
                   max={10000}
                 />
@@ -1003,8 +1066,8 @@ export default function EditorPage() {
                   type="number"
                   label={t('height')}
                   suffix="px"
-                  value={height}
-                  onChange={(e) => handleHeightChange(Number(e.target.value))}
+                  value={height || ''}
+                  onChange={(e) => handleHeightChange(Number(e.target.value) || 0)}
                   min={1}
                   max={10000}
                 />
@@ -1139,6 +1202,12 @@ export default function EditorPage() {
               </PreviewInfo>
             </PreviewHeader>
             <PreviewContainer>
+              {isPreviewProcessing && (
+                <ProcessingOverlay>
+                  <ProcessingSpinner />
+                  <ProcessingLabel>PROCESSING...</ProcessingLabel>
+                </ProcessingOverlay>
+              )}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <PreviewImage
                 src={displayImage}
