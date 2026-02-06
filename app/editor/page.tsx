@@ -42,23 +42,33 @@ const PageContainer = styled.div`
   color: ${colors.text};
 `;
 
+const HeaderWrapper = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 12px 12px 0;
+
+  @media (min-width: 640px) {
+    padding: 16px 16px 0;
+  }
+`;
+
 const Header = styled.header`
   background-color: ${colors.bgCard};
-  border-bottom: 1px solid ${colors.border};
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  position: relative;
-  z-index: 10;
+  border: 1px solid ${colors.border};
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  max-width: 72rem;
+  margin: 0 auto;
 `;
 
 const HeaderContent = styled.div`
-  max-width: 72rem;
-  margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px;
+  padding: 12px 16px;
 `;
 
 const HeaderLeft = styled.div`
@@ -785,6 +795,7 @@ export default function EditorPage() {
   const [processedImage, setProcessedImage] = useState<ProcessedImage | null>(null);
   const [lastProcessedKey, setLastProcessedKey] = useState('');
   const processCounterRef = useRef(0);
+  const [resetCounter, setResetCounter] = useState(0);
 
   // Download success state
   const [downloadComplete, setDownloadComplete] = useState(false);
@@ -891,7 +902,8 @@ export default function EditorPage() {
           console.error('Preview processing error:', error);
         }
       });
-  }, [imageDataUrl, imageInfo, isLoading, debouncedWidth, debouncedHeight, debouncedFormat, debouncedQuality, keepAspectRatio]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageDataUrl, imageInfo, isLoading, debouncedWidth, debouncedHeight, debouncedFormat, debouncedQuality, keepAspectRatio, resetCounter]);
 
   // Download
   const handleDownload = useCallback(() => {
@@ -928,6 +940,7 @@ export default function EditorPage() {
         URL.revokeObjectURL(processedImage.url);
       }
       setProcessedImage(null);
+      setResetCounter((c) => c + 1);
     }
   }, [imageInfo, processedImage]);
 
@@ -960,37 +973,39 @@ export default function EditorPage() {
 
   return (
     <PageContainer>
-      <Header>
-        <HeaderContent>
-          <HeaderLeft>
-            <BackButton onClick={handleBack}>
-              <svg
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              <span>{tc('back')}</span>
-            </BackButton>
-            <Divider />
-            <Title>{t('title')}</Title>
-          </HeaderLeft>
-          <HeaderRight>
-            <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
-              {tc('reset')}
-            </ActionButton>
-            <ActionButton $size="sm" onClick={handleDownload} disabled={!processedImage || isPreviewProcessing}>
-              {isPreviewProcessing ? '...' : tc('download')}
-            </ActionButton>
-          </HeaderRight>
-        </HeaderContent>
-      </Header>
+      <HeaderWrapper>
+        <Header>
+          <HeaderContent>
+            <HeaderLeft>
+              <BackButton onClick={handleBack}>
+                <svg
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+                <span>{tc('back')}</span>
+              </BackButton>
+              <Divider />
+              <Title>{t('title')}</Title>
+            </HeaderLeft>
+            <HeaderRight>
+              <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
+                {tc('reset')}
+              </ActionButton>
+              <ActionButton $size="sm" onClick={handleDownload} disabled={!processedImage || isPreviewProcessing}>
+                {isPreviewProcessing ? '...' : tc('download')}
+              </ActionButton>
+            </HeaderRight>
+          </HeaderContent>
+        </Header>
+      </HeaderWrapper>
 
       <Main>
         {/* Controls Section */}

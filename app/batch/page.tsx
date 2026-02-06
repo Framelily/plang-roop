@@ -35,23 +35,33 @@ const PageContainer = styled.div`
   flex-direction: column;
 `;
 
+const HeaderWrapper = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 12px 12px 0;
+
+  @media (min-width: 640px) {
+    padding: 16px 16px 0;
+  }
+`;
+
 const Header = styled.header`
   background-color: ${colors.bgCard};
-  border-bottom: 1px solid ${colors.border};
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  position: relative;
-  z-index: 10;
+  border: 1px solid ${colors.border};
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  max-width: 72rem;
+  margin: 0 auto;
 `;
 
 const HeaderContent = styled.div`
-  max-width: 72rem;
-  margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 1rem;
+  padding: 12px 16px;
 `;
 
 const HeaderLeft = styled.div`
@@ -608,44 +618,46 @@ export default function BatchPage() {
   return (
     <PageContainer>
       {/* Header */}
-      <Header>
-        <HeaderContent>
-          <HeaderLeft>
-            <BackButton onClick={handleBack}>
-              <BackIcon
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+      <HeaderWrapper>
+        <Header>
+          <HeaderContent>
+            <HeaderLeft>
+              <BackButton onClick={handleBack}>
+                <BackIcon
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </BackIcon>
+                <BackText>{tc('back')}</BackText>
+              </BackButton>
+              <Divider />
+              <Title>{t('title')}</Title>
+              <ImageCount>{images.length}</ImageCount>
+            </HeaderLeft>
+            <HeaderRight>
+              {hasProcessedImages && (
+                <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
+                  {tc('reset')}
+                </ActionButton>
+              )}
+              <ActionButton
+                $size="sm"
+                onClick={handleProcessAndDownload}
+                disabled={isProcessing || images.length === 0}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </BackIcon>
-              <BackText>{tc('back')}</BackText>
-            </BackButton>
-            <Divider />
-            <Title>{t('title')}</Title>
-            <ImageCount>{images.length}</ImageCount>
-          </HeaderLeft>
-          <HeaderRight>
-            {hasProcessedImages && (
-              <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
-                {tc('reset')}
+                {isProcessing ? tc('processing') : tc('download')}
               </ActionButton>
-            )}
-            <ActionButton
-              $size="sm"
-              onClick={handleProcessAndDownload}
-              disabled={isProcessing || images.length === 0}
-            >
-              {isProcessing ? tc('processing') : tc('download')}
-            </ActionButton>
-          </HeaderRight>
-        </HeaderContent>
-      </Header>
+            </HeaderRight>
+          </HeaderContent>
+        </Header>
+      </HeaderWrapper>
 
       <Main>
         {/* Selected Images */}
