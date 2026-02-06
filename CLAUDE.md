@@ -54,20 +54,24 @@ i18n/messages/      # {en,th}.json translation files
 
 ### Styling System
 
-**Theme: Retro cyberpunk/neon** with CRT scanline effects, glitch animations, and neon glows.
+All pages use the **Soft UI Evolution** design system (light, rounded, soft shadows).
 
-Each page defines a `colors` object at file top with the shared palette:
+**Soft UI Evolution** color palette (used across all pages):
 ```javascript
-bg: '#0F0F23', bgLight: '#1a1a2e', bgCard: '#16213e',
-primary: '#A855F7', neonPink: '#FF71CE', neonCyan: '#01CDFE', neonGreen: '#05FFA1'
+bg: '#F8FAFC', bgCard: '#FFFFFF', primary: '#3B82F6', primaryLight: '#DBEAFE',
+secondary: '#8B5CF6', success: '#22C55E', warning: '#F59E0B', error: '#EF4444',
+text: '#1E293B', textMuted: '#64748B', border: '#E2E8F0'
 ```
+- Rounded corners: 16px cards, 12px buttons, 8px inputs
+- Soft shadows: `0 2px 8px rgba(0,0,0,0.06)`, hover lift `translateY(-2px)`
+- No CRT scanlines, no neon glow, no glitch animations
 
 **Fonts** (loaded in `layout.tsx` as CSS variables):
-- `--font-pixel` → Press Start 2P (pixel art headings)
-- `--font-terminal` → VT323 (terminal-style body text, also Ant Design override)
+- `--font-heading` → Varela Round (headings)
+- `--font-body` → Nunito Sans (body text, Ant Design override on Home)
 - `--font-thai` → Sarabun (Thai language, 400-700 weights)
 
-Ant Design is configured with `borderRadius: 0` and VT323 font to match pixel-art aesthetic.
+Ant Design on Home page: `borderRadius: 12`, `fontFamily: 'Nunito Sans'`.
 
 ### Provider Hierarchy (layout.tsx)
 ```
@@ -88,5 +92,5 @@ StyledComponentsRegistry → AntdRegistry → NextIntlClientProvider → ThemePr
 
 ### Styled-Components Conventions
 - Transient props use `$` prefix (e.g., `$visible`, `$top`) per styled-components v6
-- Each page/component defines its own keyframe animations (blink, scanline, glowPulse, float)
+- Each page/component defines its own `colors` object and keyframe animations
 - SSR handled by custom registry in `lib/registry.tsx` using React 19's `useServerInsertedHTML`

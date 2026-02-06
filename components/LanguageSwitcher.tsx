@@ -6,15 +6,10 @@ import styled from 'styled-components';
 import { locales, localeNames, type Locale } from '@/i18n/config';
 
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  bgCard: '#16213e',
-  primary: '#A855F7',
-  neonPink: '#FF71CE',
-  neonCyan: '#01CDFE',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  primary: '#3B82F6',
+  text: '#1E293B',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
 };
 
 const SwitcherContainer = styled.div`
@@ -23,33 +18,21 @@ const SwitcherContainer = styled.div`
 `;
 
 const LangButton = styled.button<{ $active: boolean }>`
-  font-family: var(--font-pixel);
-  font-size: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  padding: 0.4rem 0.75rem;
   background: ${({ $active }) => ($active ? colors.primary : 'transparent')};
-  color: ${({ $active }) => ($active ? colors.text : colors.textMuted)};
-  border: 2px solid ${({ $active }) => ($active ? colors.neonPink : colors.border)};
+  color: ${({ $active }) => ($active ? '#FFFFFF' : colors.textMuted)};
+  border: 1.5px solid ${({ $active }) => ($active ? colors.primary : colors.border)};
+  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   text-transform: uppercase;
-
-  ${({ $active }) =>
-    $active &&
-    `
-    box-shadow: 0 0 10px ${colors.primary}60;
-  `}
+  font-weight: 600;
 
   &:hover {
-    border-color: ${colors.neonCyan};
-    color: ${({ $active }) => ($active ? colors.text : colors.neonCyan)};
-  }
-
-  &:first-child {
-    border-radius: 0;
-  }
-
-  &:last-child {
-    border-radius: 0;
+    border-color: ${colors.primary};
+    color: ${({ $active }) => ($active ? '#FFFFFF' : colors.primary)};
   }
 `;
 

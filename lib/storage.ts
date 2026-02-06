@@ -78,20 +78,6 @@ export async function removeImageData(key: string): Promise<void> {
   });
 }
 
-export async function clearAllImageData(): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-
-    const request = store.clear();
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-
-    transaction.oncomplete = () => db.close();
-  });
-}
-
 // Storage keys
 export const STORAGE_KEYS = {
   PENDING_IMAGE_DATA: 'pendingImageData',

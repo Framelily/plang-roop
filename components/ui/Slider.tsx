@@ -3,95 +3,69 @@
 import { InputHTMLAttributes, forwardRef } from 'react';
 import styled from 'styled-components';
 
-// Pixel Art Color Palette
+// Soft UI Evolution Palette
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  neonCyan: '#01CDFE',
-  neonPink: '#FF71CE',
-  primary: '#A855F7',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  primary: '#3B82F6',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
 };
 
 const SliderWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const LabelRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  gap: 8px;
 `;
 
 const Label = styled.label`
-  font-family: var(--font-pixel);
-  font-size: 0.5rem;
-  color: ${colors.neonCyan};
-  text-transform: uppercase;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  color: ${colors.textMuted};
+  font-weight: 600;
+`;
+
+const SliderRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
 `;
 
 const ValueDisplay = styled.span`
-  font-family: var(--font-terminal);
-  font-size: 1.25rem;
-  color: ${colors.neonPink};
-  text-shadow: 0 0 10px ${colors.neonPink}80;
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  color: ${colors.primary};
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
 `;
 
-const StyledSlider = styled.input.attrs({ type: 'range' })`
-  width: 100%;
-  height: 8px;
-  background: ${colors.bgLight};
-  border: 2px solid ${colors.border};
-  cursor: pointer;
+const StyledSlider = styled.input`
+  flex: 1;
   -webkit-appearance: none;
-  appearance: none;
+  height: 6px;
+  background: ${colors.border};
+  border: none;
+  border-radius: 4px;
+  outline: none;
 
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     background: ${colors.primary};
-    border: 2px solid ${colors.neonPink};
+    border: 2px solid white;
+    border-radius: 50%;
     cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  &::-webkit-slider-thumb:hover {
-    background: ${colors.neonPink};
-    box-shadow: 0 0 15px ${colors.neonPink}80;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   }
 
   &::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     background: ${colors.primary};
-    border: 2px solid ${colors.neonPink};
+    border: 2px solid white;
+    border-radius: 50%;
     cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  &::-moz-range-thumb:hover {
-    background: ${colors.neonPink};
-    box-shadow: 0 0 15px ${colors.neonPink}80;
-  }
-
-  &:focus {
-    outline: none;
-  }
-
-  &::-webkit-slider-runnable-track {
-    background: linear-gradient(
-      to right,
-      ${colors.primary} 0%,
-      ${colors.primary} var(--progress, 50%),
-      ${colors.bgLight} var(--progress, 50%),
-      ${colors.bgLight} 100%
-    );
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   }
 `;
 
@@ -103,29 +77,25 @@ interface SliderProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'
 
 const Slider = forwardRef<HTMLInputElement, SliderProps>(
   ({ label, showValue = true, suffix = '%', id, value, min = 0, max = 100, ...props }, ref) => {
-    const progress = ((Number(value) - Number(min)) / (Number(max) - Number(min))) * 100;
-
     return (
       <SliderWrapper>
-        {(label || showValue) && (
-          <LabelRow>
-            {label && <Label htmlFor={id}>{label}</Label>}
-            {showValue && (
-              <ValueDisplay>
-                {value}{suffix}
-              </ValueDisplay>
-            )}
-          </LabelRow>
-        )}
-        <StyledSlider
-          ref={ref}
-          id={id}
-          value={value}
-          min={min}
-          max={max}
-          style={{ '--progress': `${progress}%` } as React.CSSProperties}
-          {...props}
-        />
+        {label && <Label htmlFor={id}>{label}</Label>}
+        <SliderRow>
+          <StyledSlider
+            type="range"
+            ref={ref}
+            id={id}
+            value={value}
+            min={min}
+            max={max}
+            {...props}
+          />
+          {showValue && (
+            <ValueDisplay>
+              {value}{suffix}
+            </ValueDisplay>
+          )}
+        </SliderRow>
       </SliderWrapper>
     );
   }

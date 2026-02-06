@@ -4,18 +4,16 @@ import styled, { keyframes } from 'styled-components';
 import type { ImageFile } from '@/lib/types';
 import { formatFileSize } from '@/lib/utils';
 
-// Pixel Art Color Palette
+// Soft UI Evolution Palette
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  bgCard: '#16213e',
-  neonPink: '#FF71CE',
-  neonCyan: '#01CDFE',
-  neonGreen: '#05FFA1',
-  error: '#F43F5E',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  bg: '#F8FAFC',
+  bgCard: '#FFFFFF',
+  primary: '#3B82F6',
+  success: '#22C55E',
+  error: '#EF4444',
+  text: '#1E293B',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
 };
 
 const spin = keyframes`
@@ -33,15 +31,16 @@ const ImageCard = styled.div<{ $isSelected: boolean }>`
   position: relative;
   cursor: pointer;
   overflow: hidden;
-  border: 3px solid ${({ $isSelected }) => ($isSelected ? colors.neonCyan : colors.border)};
+  border: 1px solid ${({ $isSelected }) => ($isSelected ? colors.primary : colors.border)};
+  border-radius: 12px;
   background: ${colors.bgCard};
   transition: all 0.2s;
   box-shadow: ${({ $isSelected }) =>
-    $isSelected ? `0 0 15px ${colors.neonCyan}60` : 'none'};
+    $isSelected ? `0 0 0 2px ${colors.primary}40` : '0 1px 3px rgba(0,0,0,0.06)'};
 
   &:hover {
-    border-color: ${colors.neonPink};
-    box-shadow: 0 0 15px ${colors.neonPink}40;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -49,13 +48,14 @@ const ImageWrapper = styled.div`
   position: relative;
   width: 80px;
   height: 80px;
-  background: ${colors.bgLight};
+  background: ${colors.bg};
 `;
 
 const Thumbnail = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 12px 12px 0 0;
 `;
 
 const Overlay = styled.div`
@@ -64,13 +64,14 @@ const Overlay = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px 12px 0 0;
 `;
 
 const SpinnerIcon = styled.svg`
   width: 24px;
   height: 24px;
-  color: ${colors.neonCyan};
+  color: ${colors.primary};
   animation: ${spin} 1s linear infinite;
 `;
 
@@ -78,20 +79,21 @@ const StatusBadge = styled.div<{ $status: 'completed' | 'error' }>`
   position: absolute;
   bottom: 4px;
   right: 4px;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: ${({ $status }) =>
-    $status === 'completed' ? colors.neonGreen : colors.error};
-  border: 2px solid ${colors.bg};
+    $status === 'completed' ? colors.success : colors.error};
+  border: 2px solid white;
+  border-radius: 50%;
 `;
 
 const StatusIcon = styled.svg`
   width: 10px;
   height: 10px;
-  color: ${colors.bg};
+  color: white;
 `;
 
 const RemoveButton = styled.button`
@@ -104,7 +106,8 @@ const RemoveButton = styled.button`
   align-items: center;
   justify-content: center;
   background: ${colors.bgCard};
-  border: 2px solid ${colors.border};
+  border: 1px solid ${colors.border};
+  border-radius: 50%;
   opacity: 0;
   transition: all 0.2s;
   cursor: pointer;
@@ -116,13 +119,18 @@ const RemoveButton = styled.button`
   &:hover {
     background: ${colors.error};
     border-color: ${colors.error};
+    color: white;
   }
 `;
 
 const RemoveIcon = styled.svg`
   width: 10px;
   height: 10px;
-  color: ${colors.text};
+  color: ${colors.textMuted};
+
+  ${RemoveButton}:hover & {
+    color: white;
+  }
 `;
 
 const Tooltip = styled.div`
@@ -131,9 +139,11 @@ const Tooltip = styled.div`
   left: 50%;
   transform: translateX(-50%);
   margin-bottom: 8px;
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   background: ${colors.bgCard};
-  border: 2px solid ${colors.neonCyan};
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -146,8 +156,8 @@ const Tooltip = styled.div`
 `;
 
 const TooltipName = styled.p`
-  font-family: var(--font-pixel);
-  font-size: 0.375rem;
+  font-family: var(--font-heading);
+  font-size: 0.688rem;
   color: ${colors.text};
   max-width: 150px;
   overflow: hidden;
@@ -156,9 +166,9 @@ const TooltipName = styled.p`
 `;
 
 const TooltipSize = styled.p`
-  font-family: var(--font-terminal);
-  font-size: 0.875rem;
-  color: ${colors.neonCyan};
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: ${colors.textMuted};
   margin: 0;
 `;
 

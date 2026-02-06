@@ -3,17 +3,14 @@
 import styled from 'styled-components';
 import type { GeneratedFavicon } from '@/lib/favicon/generator';
 
-// Pixel Art Color Palette
+// Soft UI Evolution Palette
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  bgCard: '#16213e',
-  neonPink: '#FF71CE',
-  neonCyan: '#01CDFE',
-  neonGreen: '#05FFA1',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  bg: '#F8FAFC',
+  bgCard: '#FFFFFF',
+  success: '#22C55E',
+  text: '#1E293B',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
 };
 
 const PreviewContainer = styled.div`
@@ -23,12 +20,11 @@ const PreviewContainer = styled.div`
 `;
 
 const Title = styled.h3`
-  font-family: var(--font-pixel);
-  font-size: 0.625rem;
-  color: ${colors.neonPink};
-  text-shadow: 0 0 10px ${colors.neonPink}60;
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  color: ${colors.text};
+  font-weight: 700;
   margin: 0;
-  text-transform: uppercase;
 `;
 
 const IcoIndicator = styled.div`
@@ -36,21 +32,22 @@ const IcoIndicator = styled.div`
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: ${colors.bgCard};
-  border: 2px solid ${colors.neonGreen};
-  box-shadow: 0 0 10px ${colors.neonGreen}30;
+  background: #F0FDF4;
+  border: 1px solid ${colors.success};
+  border-radius: 8px;
 `;
 
 const CheckIcon = styled.svg`
   width: 16px;
   height: 16px;
-  color: ${colors.neonGreen};
+  color: ${colors.success};
 `;
 
 const IcoText = styled.span`
-  font-family: var(--font-terminal);
-  font-size: 1rem;
-  color: ${colors.neonGreen};
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: ${colors.success};
+  font-weight: 500;
 `;
 
 const FaviconsGrid = styled.div`
@@ -73,13 +70,14 @@ const FaviconFrame = styled.div<{ $frameSize: number }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${colors.bgLight};
-  border: 2px solid ${colors.border};
+  background: ${colors.bg};
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
   transition: all 0.2s;
 
   &:hover {
-    border-color: ${colors.neonCyan};
-    box-shadow: 0 0 10px ${colors.neonCyan}40;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 `;
 
@@ -88,8 +86,8 @@ const FaviconImage = styled.img<{ $pixelated: boolean }>`
 `;
 
 const SizeLabel = styled.span`
-  font-family: var(--font-terminal);
-  font-size: 0.875rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
   color: ${colors.textMuted};
 `;
 

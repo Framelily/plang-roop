@@ -6,62 +6,48 @@ import { Input, Checkbox, RadioGroup, Slider } from '@/components/ui';
 import type { BatchOptions, ImageFormat } from '@/lib/types';
 import { FORMAT_LABELS, SUPPORTED_FORMATS } from '@/lib/types';
 
-// Pixel Art Color Palette
+// Soft UI Evolution Palette
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  bgCard: '#16213e',
-  neonPink: '#FF71CE',
-  neonCyan: '#01CDFE',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  text: '#1E293B',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
 };
 
 const ControlsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
 `;
-
-const Section = styled.div``;
 
 const SectionTitle = styled.h3`
-  font-family: var(--font-pixel);
-  font-size: 0.625rem;
-  color: ${colors.neonPink};
-  text-shadow: 0 0 10px ${colors.neonPink}60;
-  margin: 0 0 1rem;
-  text-transform: uppercase;
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  color: ${colors.text};
+  font-weight: 700;
+  margin-bottom: 16px;
 `;
 
-const FieldGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+const InputGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 `;
 
-const Divider = styled.div`
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    ${colors.border} 20%,
-    ${colors.border} 80%,
-    transparent
-  );
+const SectionDivider = styled.div`
+  height: 1px;
+  background: ${colors.border};
+  margin: 20px 0;
 `;
 
 const HelpText = styled.p`
-  font-family: var(--font-terminal);
-  font-size: 0.875rem;
+  font-family: var(--font-body);
+  font-size: 0.813rem;
   color: ${colors.textMuted};
-  margin: 0.5rem 0 0;
-
-  &::before {
-    content: '> ';
-    color: ${colors.neonCyan};
-  }
+  margin-top: 8px;
 `;
 
 interface BatchControlsProps {
@@ -110,9 +96,9 @@ export default function BatchControls({
   return (
     <ControlsContainer>
       {/* Resize Section */}
-      <Section>
+      <div>
         <SectionTitle>{t('resize')}</SectionTitle>
-        <FieldGroup>
+        <InputGrid>
           <Input
             id="batch-width"
             type="number"
@@ -135,42 +121,34 @@ export default function BatchControls({
             max={10000}
             placeholder={t('original')}
           />
+        </InputGrid>
+        <div style={{ marginTop: '12px' }}>
           <Checkbox
             id="batch-keepRatio"
             label={t('keepAspectRatio')}
             checked={options.keepAspectRatio}
             onChange={(e) => onChange({ keepAspectRatio: e.target.checked })}
           />
-        </FieldGroup>
-      </Section>
+        </div>
+      </div>
 
-      <Divider />
+      <SectionDivider />
 
       {/* Format Section */}
-      <Section>
+      <div>
         <SectionTitle>{t('outputFormat')}</SectionTitle>
-        <FieldGroup>
-          <Checkbox
-            id="batch-useOriginal"
-            label={t('keepOriginalFormat')}
-            checked={options.useOriginalFormat}
-            onChange={(e) => onChange({ useOriginalFormat: e.target.checked })}
-          />
-          {!options.useOriginalFormat && (
-            <RadioGroup
-              name="batch-format"
-              value={options.format}
-              onChange={(value) => onChange({ format: value as ImageFormat })}
-              options={formatOptions}
-            />
-          )}
-        </FieldGroup>
-      </Section>
+        <RadioGroup
+          name="batch-format"
+          value={options.format}
+          onChange={(value) => onChange({ format: value as ImageFormat, useOriginalFormat: false })}
+          options={formatOptions}
+        />
+      </div>
 
-      <Divider />
+      <SectionDivider />
 
       {/* Quality Section */}
-      <Section>
+      <div>
         <SectionTitle>{t('quality')}</SectionTitle>
         <Slider
           id="batch-quality"
@@ -183,7 +161,7 @@ export default function BatchControls({
         <HelpText>
           {t('qualityHelp')}
         </HelpText>
-      </Section>
+      </div>
     </ControlsContainer>
   );
 }

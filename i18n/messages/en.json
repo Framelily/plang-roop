@@ -46,7 +46,9 @@
     "dim": "DIM",
     "size": "SIZE",
     "saved": "SAVED",
-    "preview": "PREVIEW"
+    "preview": "PREVIEW",
+    "downloadSuccess": "DOWNLOAD COMPLETE!",
+    "redirecting": "Redirecting to home in {seconds}s..."
   },
   "batch": {
     "title": "BATCH EDITOR",
@@ -61,7 +63,9 @@
     "totalProcessed": "Total Processed",
     "saved": "Saved",
     "processingLabel": "Processing: {file}",
-    "starting": "Starting..."
+    "starting": "Starting...",
+    "downloadSuccess": "DOWNLOAD COMPLETE!",
+    "redirecting": "Redirecting to home in {seconds}s..."
   },
   "favicon": {
     "title": "FAVICON GENERATOR",
@@ -90,17 +94,17 @@
     "dragImages": "DRAG & DROP IMAGES",
     "clickToSelect": "or click to select a file",
     "clickToSelectMultiple": "or click to select files",
-    "supports": "Supports: JPG, PNG, WebP (max 50MB)",
+    "supports": "Supports: JPG, PNG, WebP, GIF (max 50MB)",
     "addMore": "ADD MORE"
   },
   "batchControls": {
-    "resize": "Resize",
+    "resize": "RESIZE",
     "width": "Width",
     "height": "Height",
     "keepAspectRatio": "Keep aspect ratio",
-    "outputFormat": "Output Format",
+    "outputFormat": "OUTPUT FORMAT",
     "keepOriginalFormat": "Keep original format",
-    "quality": "Quality",
+    "quality": "QUALITY",
     "qualityHelp": "Lower quality = smaller file size (affects JPG & WebP)",
     "original": "Original"
   }

@@ -12,10 +12,6 @@ export function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-export function getFileExtension(filename: string): string {
-  return filename.slice(((filename.lastIndexOf('.') - 1) >>> 0) + 2);
-}
-
 export function getMimeType(format: ImageFormat): string {
   const mimeTypes: Record<ImageFormat, string> = {
     jpeg: 'image/jpeg',
@@ -43,11 +39,3 @@ export function getExtensionFromFormat(format: ImageFormat): string {
   return extensions[format];
 }
 
-export function calculatePercentageSaved(original: number, processed: number): number {
-  if (original === 0) return 0;
-  return Math.round(((original - processed) / original) * 100);
-}
-
-export function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}

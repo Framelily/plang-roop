@@ -46,7 +46,9 @@
     "dim": "ขนาด",
     "size": "ขนาดไฟล์",
     "saved": "ประหยัด",
-    "preview": "ตัวอย่าง"
+    "preview": "ตัวอย่าง",
+    "downloadSuccess": "ดาวน์โหลดสำเร็จ!",
+    "redirecting": "กลับหน้าแรกใน {seconds} วินาที..."
   },
   "batch": {
     "title": "แก้ไขหลายภาพ",
@@ -61,7 +63,9 @@
     "totalProcessed": "ขนาดใหม่รวม",
     "saved": "ประหยัด",
     "processingLabel": "กำลังประมวลผล: {file}",
-    "starting": "กำลังเริ่ม..."
+    "starting": "กำลังเริ่ม...",
+    "downloadSuccess": "ดาวน์โหลดสำเร็จ!",
+    "redirecting": "กลับหน้าแรกใน {seconds} วินาที..."
   },
   "favicon": {
     "title": "สร้าง FAVICON",
@@ -90,7 +94,7 @@
     "dragImages": "ลากและวางรูปภาพ",
     "clickToSelect": "หรือคลิกเพื่อเลือกไฟล์",
     "clickToSelectMultiple": "หรือคลิกเพื่อเลือกไฟล์",
-    "supports": "รองรับ: JPG, PNG, WebP (สูงสุด 50MB)",
+    "supports": "รองรับ: JPG, PNG, WebP, GIF (สูงสุด 50MB)",
     "addMore": "เพิ่มเติม"
   },
   "batchControls": {

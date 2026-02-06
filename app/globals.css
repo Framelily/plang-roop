@@ -1,33 +1,23 @@
 @import "tailwindcss";
 
-/* Enable class-based dark mode for Tailwind v4 */
-@custom-variant dark (&:where(.dark, .dark *));
-
 html {
   font-size: 120%; /* Base 19.2px instead of 16px for better readability */
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-.dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --background: #F8FAFC;
+  --foreground: #1E293B;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
   --font-thai: var(--font-thai);
 }
 
 /* Thai language support - use Sarabun as fallback for Thai characters */
 :lang(th) {
-  font-family: var(--font-thai), var(--font-terminal), sans-serif;
+  font-family: var(--font-thai), var(--font-body), sans-serif;
 }
 
 body {

@@ -2,15 +2,13 @@
 
 import styled from 'styled-components';
 
-// Pixel Art Color Palette
+// Soft UI Evolution Palette
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  neonCyan: '#01CDFE',
-  neonPink: '#FF71CE',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  primary: '#3B82F6',
+  primaryLight: '#DBEAFE',
+  bgCard: '#FFFFFF',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
 };
 
 const RadioGroupWrapper = styled.div`
@@ -20,62 +18,40 @@ const RadioGroupWrapper = styled.div`
 `;
 
 const GroupLabel = styled.span`
-  font-family: var(--font-pixel);
-  font-size: 0.5rem;
-  color: ${colors.neonCyan};
-  text-transform: uppercase;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  color: ${colors.textMuted};
+  font-weight: 600;
 `;
 
 const OptionsContainer = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 8px;
   flex-wrap: wrap;
 `;
 
-const RadioLabel = styled.label`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-family: var(--font-terminal);
-  font-size: 1rem;
-  color: ${colors.text};
-  transition: color 0.2s;
-
-  &:hover {
-    color: ${colors.neonPink};
-  }
-`;
-
-const HiddenRadio = styled.input.attrs({ type: 'radio' })`
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-`;
-
-const StyledRadio = styled.div<{ $checked: boolean }>`
-  width: 16px;
-  height: 16px;
-  background: ${colors.bgLight};
-  border: 2px solid ${({ $checked }) => ($checked ? colors.neonPink : colors.border)};
+const RadioLabel = styled.label<{ $checked: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px 16px;
+  border: 1px solid ${props => props.$checked ? colors.primary : colors.border};
+  background-color: ${props => props.$checked ? colors.primaryLight : colors.bgCard};
+  cursor: pointer;
   transition: all 0.2s;
-  flex-shrink: 0;
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: ${props => props.$checked ? colors.primary : colors.textMuted};
+  border-radius: 8px;
 
-  ${RadioLabel}:hover & {
-    border-color: ${colors.neonPink};
-    box-shadow: 0 0 8px ${colors.neonPink}40;
+  &:hover {
+    border-color: ${colors.primary};
+    color: ${colors.primary};
   }
 
-  &::after {
-    content: '';
-    display: ${({ $checked }) => ($checked ? 'block' : 'none')};
-    width: 8px;
-    height: 8px;
-    background: ${colors.neonPink};
+  input {
+    display: none;
   }
 `;
 
@@ -104,15 +80,15 @@ export default function RadioGroup({
       {label && <GroupLabel>{label}</GroupLabel>}
       <OptionsContainer>
         {options.map((option) => (
-          <RadioLabel key={option.value}>
-            <HiddenRadio
+          <RadioLabel key={option.value} $checked={value === option.value}>
+            <input
+              type="radio"
               name={name}
               value={option.value}
               checked={value === option.value}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={() => onChange(option.value)}
             />
-            <StyledRadio $checked={value === option.value} />
-            <span>{option.label}</span>
+            {option.label}
           </RadioLabel>
         ))}
       </OptionsContainer>

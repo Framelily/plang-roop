@@ -1,5 +1,5 @@
 import type { ImageFile, BatchOptions, ProcessedImage, ImageFormat } from '../types';
-import { processImage, loadImage } from './resize';
+import { processImage } from './resize';
 import { getFormatFromMimeType } from '../utils';
 
 export type BatchProgressCallback = (

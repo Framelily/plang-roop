@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import styled, { keyframes, css } from 'styled-components';
+import styled from 'styled-components';
 import { useTranslations } from 'next-intl';
 import ImageQueue from '@/components/ImageQueue';
 import BatchControls from '@/components/BatchControls';
@@ -15,48 +15,17 @@ import { formatFileSize, generateId } from '@/lib/utils';
 import { getImageData, removeImageData, STORAGE_KEYS } from '@/lib/storage';
 import type { ImageFile, BatchOptions, ImageFormat } from '@/lib/types';
 
-// Color Palette
+// Soft UI Evolution Palette
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  bgCard: '#16213e',
-  primary: '#A855F7',
-  neonPink: '#FF71CE',
-  neonCyan: '#01CDFE',
-  neonGreen: '#05FFA1',
-  neonYellow: '#FFFB96',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  bg: '#F8FAFC',
+  bgCard: '#FFFFFF',
+  primary: '#3B82F6',
+  primaryLight: '#DBEAFE',
+  success: '#22C55E',
+  text: '#1E293B',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
 };
-
-// Keyframe Animations
-const scanline = keyframes`
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(100%);
-  }
-`;
-
-const blink = keyframes`
-  0%, 50% {
-    opacity: 1;
-  }
-  51%, 100% {
-    opacity: 0;
-  }
-`;
-
-const glowPulse = keyframes`
-  0%, 100% {
-    box-shadow: 0 0 5px ${colors.primary}, 0 0 10px ${colors.primary};
-  }
-  50% {
-    box-shadow: 0 0 10px ${colors.primary}, 0 0 20px ${colors.primary}, 0 0 30px ${colors.neonPink};
-  }
-`;
 
 // Styled Components
 const PageContainer = styled.div`
@@ -64,61 +33,14 @@ const PageContainer = styled.div`
   background-color: ${colors.bg};
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
-
-  /* CRT Scanline Effect */
-  &::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 200%;
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.15),
-      rgba(0, 0, 0, 0.15) 1px,
-      transparent 1px,
-      transparent 2px
-    );
-    pointer-events: none;
-    z-index: 1000;
-    animation: ${scanline} 8s linear infinite;
-  }
-
-  &::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(
-      ellipse at center,
-      transparent 0%,
-      rgba(0, 0, 0, 0.3) 100%
-    );
-    pointer-events: none;
-    z-index: 999;
-  }
 `;
 
 const Header = styled.header`
-  border-bottom: 3px solid ${colors.border};
-  background-color: ${colors.bgLight};
+  background-color: ${colors.bgCard};
+  border-bottom: 1px solid ${colors.border};
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   position: relative;
   z-index: 10;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -3px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: linear-gradient(90deg, ${colors.neonCyan}, ${colors.neonPink}, ${colors.neonGreen});
-  }
 `;
 
 const HeaderContent = styled.div`
@@ -150,14 +72,15 @@ const BackButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  font-family: var(--font-terminal);
-  font-size: 1.25rem;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
   transition: all 0.2s;
   padding: 0.5rem;
+  border-radius: 8px;
 
   &:hover {
-    color: ${colors.neonCyan};
-    text-shadow: 0 0 10px ${colors.neonCyan};
+    color: ${colors.primary};
+    background: ${colors.primaryLight};
   }
 
   @media (min-width: 640px) {
@@ -180,7 +103,7 @@ const BackText = styled.span`
 
 const Divider = styled.div`
   display: none;
-  width: 2px;
+  width: 1px;
   height: 1.5rem;
   background: ${colors.border};
 
@@ -190,24 +113,24 @@ const Divider = styled.div`
 `;
 
 const Title = styled.h1`
-  font-family: var(--font-pixel);
-  font-size: 0.75rem;
-  color: ${colors.neonPink};
-  text-shadow: 0 0 10px ${colors.neonPink}, 0 0 20px ${colors.neonPink};
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: ${colors.text};
+  font-weight: 700;
 
   @media (min-width: 640px) {
-    font-size: 1rem;
+    font-size: 1.125rem;
   }
 `;
 
 const ImageCount = styled.span`
-  font-family: var(--font-terminal);
-  font-size: 1.25rem;
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  font-weight: 600;
   padding: 0.25rem 0.75rem;
-  background: ${colors.bgCard};
-  border: 2px solid ${colors.neonCyan};
-  color: ${colors.neonCyan};
-  box-shadow: 0 0 5px ${colors.neonCyan};
+  background: ${colors.primaryLight};
+  color: ${colors.primary};
+  border-radius: 20px;
 `;
 
 const HeaderRight = styled.div`
@@ -220,67 +143,39 @@ const HeaderRight = styled.div`
   }
 `;
 
-const PixelButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
-  font-family: var(--font-pixel);
-  font-size: ${props => props.$size === 'sm' ? '0.5rem' : '0.625rem'};
-  padding: ${props => props.$size === 'sm' ? '0.5rem 0.75rem' : '0.75rem 1rem'};
-  border: 3px solid;
+const ActionButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
+  font-family: var(--font-heading);
+  font-size: ${props => props.$size === 'sm' ? '0.813rem' : '0.875rem'};
+  padding: ${props => props.$size === 'sm' ? '8px 16px' : '10px 20px'};
+  border-radius: 12px;
   cursor: pointer;
-  position: relative;
-  transition: all 0.1s;
-  text-transform: uppercase;
+  transition: all 0.2s;
+  font-weight: 600;
 
-  ${props => props.$variant === 'outline' ? css`
+  ${props => props.$variant === 'outline' ? `
     background: transparent;
-    border-color: ${colors.neonCyan};
-    color: ${colors.neonCyan};
+    border: 1px solid ${colors.border};
+    color: ${colors.textMuted};
 
     &:hover:not(:disabled) {
-      background: ${colors.neonCyan};
-      color: ${colors.bg};
-      box-shadow: 0 0 15px ${colors.neonCyan};
+      border-color: ${colors.primary};
+      color: ${colors.primary};
+      background: ${colors.primaryLight};
     }
-  ` : css`
-    background: linear-gradient(180deg, ${colors.primary} 0%, #7C3AED 100%);
-    border-color: ${colors.neonPink};
-    color: ${colors.text};
-    box-shadow: 0 4px 0 #5B21B6, 0 0 10px ${colors.primary};
+  ` : `
+    background: ${colors.primary};
+    border: 1px solid ${colors.primary};
+    color: white;
 
     &:hover:not(:disabled) {
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 #5B21B6, 0 0 20px ${colors.primary};
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(4px);
-      box-shadow: 0 0 0 #5B21B6, 0 0 20px ${colors.primary};
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
   `}
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  /* Pixel corners */
-  &::before {
-    content: '';
-    position: absolute;
-    top: -3px;
-    left: -3px;
-    width: 6px;
-    height: 6px;
-    background: ${colors.bg};
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -3px;
-    right: -3px;
-    width: 6px;
-    height: 6px;
-    background: ${colors.bg};
   }
 `;
 
@@ -293,60 +188,39 @@ const Main = styled.main`
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem 1rem;
-  position: relative;
-  z-index: 10;
 `;
 
-const PixelCard = styled.div`
+const SoftCard = styled.div`
   background: ${colors.bgCard};
-  border: 3px solid ${colors.border};
+  border: 1px solid ${colors.border};
+  border-radius: 16px;
   padding: 1rem;
-  position: relative;
-  box-shadow:
-    inset 0 0 30px rgba(0, 0, 0, 0.5),
-    0 0 10px rgba(168, 85, 247, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
-  /* Pixel corners */
-  &::before {
-    content: '';
-    position: absolute;
-    top: -3px;
-    left: -3px;
-    width: 8px;
-    height: 8px;
-    background: ${colors.bg};
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -3px;
-    right: -3px;
-    width: 8px;
-    height: 8px;
-    background: ${colors.bg};
+  @media (min-width: 640px) {
+    padding: 1.25rem;
   }
 `;
 
 const CardTitle = styled.h2`
-  font-family: var(--font-pixel);
-  font-size: 0.625rem;
-  color: ${colors.neonGreen};
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  color: ${colors.text};
+  font-weight: 700;
   margin-bottom: 1rem;
-  text-shadow: 0 0 10px ${colors.neonGreen};
 `;
 
 const CardSubtitle = styled.h3`
-  font-family: var(--font-pixel);
-  font-size: 0.5rem;
-  color: ${colors.neonYellow};
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  color: ${colors.textMuted};
+  font-weight: 600;
   margin-bottom: 0.75rem;
-  text-shadow: 0 0 5px ${colors.neonYellow};
 `;
 
 const EmptyText = styled.p`
-  font-family: var(--font-terminal);
-  font-size: 1.5rem;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
   color: ${colors.textMuted};
   text-align: center;
   padding: 2rem 0;
@@ -389,9 +263,9 @@ const PreviewHeader = styled.div`
 `;
 
 const PreviewContainer = styled.div`
-  background: ${colors.bgLight};
-  border: 2px dashed ${colors.border};
-  border-radius: 4px;
+  background: ${colors.bg};
+  border: 1px solid ${colors.border};
+  border-radius: 12px;
   padding: 1rem;
   display: flex;
   align-items: center;
@@ -402,7 +276,7 @@ const PreviewImage = styled.img`
   max-height: 250px;
   max-width: 100%;
   object-fit: contain;
-  image-rendering: pixelated;
+  border-radius: 8px;
 
   @media (min-width: 640px) {
     max-height: 400px;
@@ -419,9 +293,10 @@ const InfoGrid = styled.div`
 const InfoColumn = styled.div``;
 
 const InfoTitle = styled.h4`
-  font-family: var(--font-pixel);
-  font-size: 0.5rem;
-  color: ${colors.neonCyan};
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  color: ${colors.textMuted};
+  font-weight: 600;
   margin-bottom: 0.5rem;
 `;
 
@@ -435,8 +310,8 @@ const InfoRow = styled.div`
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
-  font-family: var(--font-terminal);
-  font-size: 1.25rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
 `;
 
 const InfoLabel = styled.dt`
@@ -445,16 +320,17 @@ const InfoLabel = styled.dt`
 
 const InfoValue = styled.dd`
   color: ${colors.text};
-`;
-
-const InfoValueGreen = styled.dd`
-  color: ${colors.neonGreen};
   font-weight: 500;
 `;
 
+const InfoValueGreen = styled.dd`
+  color: ${colors.success};
+  font-weight: 600;
+`;
+
 const EmptyPreview = styled.div`
-  font-family: var(--font-terminal);
-  font-size: 1.5rem;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
   color: ${colors.textMuted};
   display: flex;
   align-items: center;
@@ -466,6 +342,45 @@ const EmptyPreview = styled.div`
   }
 `;
 
+const SuccessOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(248, 250, 252, 0.95);
+  z-index: 100;
+  gap: 16px;
+`;
+
+const SuccessIcon = styled.div`
+  width: 64px;
+  height: 64px;
+  background: ${colors.success};
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+`;
+
+const SuccessTitle = styled.h2`
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  color: ${colors.text};
+  font-weight: 700;
+`;
+
+const SuccessCountdown = styled.p`
+  font-family: var(--font-body);
+  font-size: 0.938rem;
+  color: ${colors.textMuted};
+`;
+
 const LoadingContainer = styled.div`
   display: flex;
   min-height: 100vh;
@@ -475,31 +390,23 @@ const LoadingContainer = styled.div`
 `;
 
 const LoadingText = styled.div`
-  font-family: var(--font-pixel);
-  font-size: 0.75rem;
-  color: ${colors.neonCyan};
-  animation: ${blink} 1s step-end infinite;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: ${colors.primary};
+  font-weight: 600;
 `;
 
-const StatsCard = styled(PixelCard)`
+const StatsCard = styled(SoftCard)`
   margin-top: 1rem;
 `;
 
-const ProgressCard = styled(PixelCard)`
-  animation: ${glowPulse} 2s ease-in-out infinite;
-`;
+const ProgressCard = styled(SoftCard)``;
 
-const ImageQueueWrapper = styled.div`
-  /* Style wrapper for ImageQueue component */
-`;
+const ImageQueueWrapper = styled.div``;
 
-const BatchControlsWrapper = styled.div`
-  /* Style wrapper for BatchControls component */
-`;
+const BatchControlsWrapper = styled.div``;
 
-const ProgressBarWrapper = styled.div`
-  /* Style wrapper for ProgressBar component */
-`;
+const ProgressBarWrapper = styled.div``;
 
 interface StoredImageData {
   name: string;
@@ -516,7 +423,7 @@ const defaultOptions: BatchOptions = {
   keepAspectRatio: true,
   format: 'jpeg',
   quality: 0.85,
-  useOriginalFormat: true,
+  useOriginalFormat: false,
   useCompression: false,
 };
 
@@ -530,6 +437,8 @@ export default function BatchPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, file: '' });
   const [isLoading, setIsLoading] = useState(true);
+  const [downloadComplete, setDownloadComplete] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   // Load images from IndexedDB
   useEffect(() => {
@@ -627,6 +536,8 @@ export default function BatchPage() {
       const processedImages = results.filter((img) => img.processedImage);
       if (processedImages.length > 0) {
         await createZipFromProcessedImages(processedImages);
+        setDownloadComplete(true);
+        setCountdown(3);
       }
     } catch (error) {
       console.error('Batch processing error:', error);
@@ -662,6 +573,18 @@ export default function BatchPage() {
     await removeImageData(STORAGE_KEYS.BATCH_IMAGES);
     router.push('/');
   }, [router]);
+
+  // Countdown after download
+  useEffect(() => {
+    if (!downloadComplete) return;
+    if (countdown <= 0) {
+      removeImageData(STORAGE_KEYS.BATCH_IMAGES);
+      router.push('/');
+      return;
+    }
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [downloadComplete, countdown, router]);
 
   const selectedImage = images.find((img) => img.id === selectedId);
   const hasProcessedImages = images.some((img) => img.processedImage);
@@ -709,24 +632,24 @@ export default function BatchPage() {
           </HeaderLeft>
           <HeaderRight>
             {hasProcessedImages && (
-              <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
+              <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
                 {tc('reset')}
-              </PixelButton>
+              </ActionButton>
             )}
-            <PixelButton
+            <ActionButton
               $size="sm"
               onClick={handleProcessAndDownload}
               disabled={isProcessing || images.length === 0}
             >
               {isProcessing ? tc('processing') : tc('download')}
-            </PixelButton>
+            </ActionButton>
           </HeaderRight>
         </HeaderContent>
       </Header>
 
       <Main>
         {/* Selected Images */}
-        <PixelCard>
+        <SoftCard>
           <CardTitle>{t('selectedImages')}</CardTitle>
 
           {images.length > 0 ? (
@@ -741,7 +664,7 @@ export default function BatchPage() {
           ) : (
             <EmptyText>{t('noImages')}</EmptyText>
           )}
-        </PixelCard>
+        </SoftCard>
 
         {/* Progress */}
         {isProcessing && (
@@ -759,7 +682,7 @@ export default function BatchPage() {
         <ContentWrapper>
           {/* Controls */}
           <ControlsColumn>
-            <PixelCard>
+            <SoftCard>
               <BatchControlsWrapper>
                 <BatchControls
                   options={options}
@@ -768,7 +691,7 @@ export default function BatchPage() {
                   originalHeight={selectedImage?.originalHeight}
                 />
               </BatchControlsWrapper>
-            </PixelCard>
+            </SoftCard>
 
             {/* Stats */}
             {hasProcessedImages && (
@@ -798,17 +721,17 @@ export default function BatchPage() {
 
           {/* Preview */}
           <PreviewColumn>
-            <PixelCard>
+            <SoftCard>
               <PreviewHeader>
                 <CardTitle>{t('preview')}</CardTitle>
                 {selectedImage?.processedImage && (
-                  <PixelButton
+                  <ActionButton
                     $variant="outline"
                     $size="sm"
                     onClick={handleDownloadSingle}
                   >
                     {tc('download')}
-                  </PixelButton>
+                  </ActionButton>
                 )}
               </PreviewHeader>
 
@@ -866,10 +789,22 @@ export default function BatchPage() {
               ) : (
                 <EmptyPreview>{t('selectToPreview')}</EmptyPreview>
               )}
-            </PixelCard>
+            </SoftCard>
           </PreviewColumn>
         </ContentWrapper>
       </Main>
+
+      {downloadComplete && (
+        <SuccessOverlay>
+          <SuccessIcon>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </SuccessIcon>
+          <SuccessTitle>{t('downloadSuccess')}</SuccessTitle>
+          <SuccessCountdown>{t('redirecting', { seconds: countdown })}</SuccessCountdown>
+        </SuccessOverlay>
+      )}
     </PageContainer>
   );
 }

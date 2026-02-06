@@ -13,12 +13,3 @@ export function downloadImage(
 
   saveAs(blob, newFilename);
 }
-
-export function downloadFromUrl(url: string, filename: string): void {
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}

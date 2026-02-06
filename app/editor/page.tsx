@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import styled, { keyframes, css } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { useTranslations } from 'next-intl';
 import { useDebounce } from '@/hooks/useDebounce';
 import { processImage } from '@/lib/image/resize';
@@ -12,47 +12,24 @@ import { formatFileSize, getFormatFromMimeType } from '@/lib/utils';
 import { getImageData, removeImageData, STORAGE_KEYS } from '@/lib/storage';
 import type { ImageFormat, ProcessedImage } from '@/lib/types';
 
-// Color Palette
+// Soft UI Evolution Palette
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  bgCard: '#16213e',
-  primary: '#A855F7',
-  neonPink: '#FF71CE',
-  neonCyan: '#01CDFE',
-  neonGreen: '#05FFA1',
-  neonYellow: '#FFFB96',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  bg: '#F8FAFC',
+  bgCard: '#FFFFFF',
+  primary: '#3B82F6',
+  primaryLight: '#DBEAFE',
+  secondary: '#8B5CF6',
+  success: '#22C55E',
+  error: '#EF4444',
+  text: '#1E293B',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
 };
 
-// Keyframe Animations
-const scanline = keyframes`
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(100%);
-  }
-`;
-
-const blink = keyframes`
-  0%, 50% {
-    opacity: 1;
-  }
-  51%, 100% {
-    opacity: 0;
-  }
-`;
-
-const glowPulse = keyframes`
-  0%, 100% {
-    box-shadow: 0 0 5px ${colors.primary}, 0 0 10px ${colors.primary};
-  }
-  50% {
-    box-shadow: 0 0 10px ${colors.primary}, 0 0 20px ${colors.primary}, 0 0 30px ${colors.primary};
-  }
+// Functional animation only
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 `;
 
 // Styled Components
@@ -61,63 +38,16 @@ const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   background-color: ${colors.bg};
-  font-family: var(--font-terminal);
+  font-family: var(--font-body);
   color: ${colors.text};
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.15),
-      rgba(0, 0, 0, 0.15) 1px,
-      transparent 1px,
-      transparent 2px
-    );
-    pointer-events: none;
-    z-index: 1000;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 100%;
-    background: linear-gradient(
-      rgba(18, 16, 16, 0) 50%,
-      rgba(0, 0, 0, 0.25) 50%
-    );
-    background-size: 100% 4px;
-    animation: ${scanline} 8s linear infinite;
-    pointer-events: none;
-    z-index: 1001;
-    opacity: 0.1;
-  }
 `;
 
 const Header = styled.header`
-  border-bottom: 4px solid ${colors.border};
-  background-color: ${colors.bgLight};
+  background-color: ${colors.bgCard};
+  border-bottom: 1px solid ${colors.border};
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   position: relative;
   z-index: 10;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, ${colors.neonPink}, ${colors.neonCyan}, ${colors.neonGreen});
-  }
 `;
 
 const HeaderContent = styled.div`
@@ -145,16 +75,15 @@ const BackButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  font-family: var(--font-terminal);
-  font-size: 18px;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
   transition: all 0.2s;
   padding: 8px 12px;
-  border: 2px solid transparent;
+  border-radius: 8px;
 
   &:hover {
-    color: ${colors.neonCyan};
-    border-color: ${colors.neonCyan};
-    text-shadow: 0 0 10px ${colors.neonCyan};
+    color: ${colors.primary};
+    background: ${colors.primaryLight};
   }
 
   svg {
@@ -164,7 +93,7 @@ const BackButton = styled.button`
 `;
 
 const Divider = styled.div`
-  width: 2px;
+  width: 1px;
   height: 24px;
   background-color: ${colors.border};
 
@@ -174,15 +103,10 @@ const Divider = styled.div`
 `;
 
 const Title = styled.h1`
-  font-family: var(--font-pixel);
-  font-size: 14px;
-  color: ${colors.neonPink};
-  text-shadow: 0 0 10px ${colors.neonPink};
-  letter-spacing: 2px;
-
-  @media (min-width: 640px) {
-    font-size: 16px;
-  }
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  color: ${colors.text};
+  font-weight: 700;
 `;
 
 const HeaderRight = styled.div`
@@ -191,37 +115,33 @@ const HeaderRight = styled.div`
   gap: 12px;
 `;
 
-const PixelButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
-  font-family: var(--font-pixel);
-  font-size: ${props => props.$size === 'sm' ? '8px' : '10px'};
-  padding: ${props => props.$size === 'sm' ? '8px 12px' : '12px 16px'};
-  border: 4px solid;
+const ActionButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
+  font-family: var(--font-heading);
+  font-size: ${props => props.$size === 'sm' ? '0.813rem' : '0.875rem'};
+  padding: ${props => props.$size === 'sm' ? '8px 16px' : '10px 20px'};
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  position: relative;
+  font-weight: 600;
 
-  ${props => props.$variant === 'outline' ? css`
+  ${props => props.$variant === 'outline' ? `
     background-color: transparent;
-    border-color: ${colors.textMuted};
+    border: 1px solid ${colors.border};
     color: ${colors.textMuted};
 
     &:hover:not(:disabled) {
-      border-color: ${colors.neonCyan};
-      color: ${colors.neonCyan};
-      text-shadow: 0 0 10px ${colors.neonCyan};
-      box-shadow: 0 0 10px ${colors.neonCyan};
+      border-color: ${colors.primary};
+      color: ${colors.primary};
+      background: ${colors.primaryLight};
     }
-  ` : css`
+  ` : `
     background-color: ${colors.primary};
-    border-color: ${colors.neonPink};
-    color: ${colors.text};
+    border: 1px solid ${colors.primary};
+    color: white;
 
     &:hover:not(:disabled) {
-      background-color: ${colors.neonPink};
-      box-shadow: 0 0 20px ${colors.neonPink};
-      text-shadow: 0 0 10px ${colors.text};
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
   `}
 
@@ -231,17 +151,7 @@ const PixelButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 's
   }
 
   &:active:not(:disabled) {
-    transform: translateY(2px);
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -4px;
-    left: -4px;
-    right: -4px;
-    bottom: -4px;
-    border: 2px solid transparent;
+    transform: translateY(0);
   }
 `;
 
@@ -254,8 +164,6 @@ const Main = styled.main`
   flex-direction: column;
   gap: 24px;
   padding: 24px 16px;
-  position: relative;
-  z-index: 10;
 
   @media (min-width: 1024px) {
     flex-direction: row;
@@ -274,36 +182,27 @@ const ControlsSection = styled.div`
 
 const Card = styled.div`
   background-color: ${colors.bgCard};
-  border: 4px solid ${colors.border};
+  border: 1px solid ${colors.border};
+  border-radius: 16px;
   padding: 16px;
-  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
   @media (min-width: 640px) {
     padding: 20px;
   }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, ${colors.neonGreen}, ${colors.neonCyan});
-  }
 `;
 
 const SectionTitle = styled.h3`
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  color: ${colors.neonGreen};
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  color: ${colors.text};
+  font-weight: 700;
   margin-bottom: 16px;
-  text-shadow: 0 0 5px ${colors.neonGreen};
 `;
 
 const SectionDivider = styled.div`
-  height: 2px;
-  background: linear-gradient(90deg, transparent, ${colors.border}, transparent);
+  height: 1px;
+  background: ${colors.border};
   margin: 20px 0;
 `;
 
@@ -321,27 +220,27 @@ const InputGroup = styled.div`
 const InputWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 `;
 
 const InputLabel = styled.label`
-  font-family: var(--font-terminal);
-  font-size: 16px;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
   color: ${colors.textMuted};
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  font-weight: 600;
 `;
 
 const InputContainer = styled.div`
   display: flex;
   align-items: center;
-  background-color: ${colors.bg};
-  border: 3px solid ${colors.border};
+  background-color: ${colors.bgCard};
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
   transition: all 0.2s;
 
   &:focus-within {
-    border-color: ${colors.neonCyan};
-    box-shadow: 0 0 10px ${colors.neonCyan};
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 `;
 
@@ -350,8 +249,8 @@ const StyledInput = styled.input`
   background: transparent;
   border: none;
   padding: 10px 12px;
-  font-family: var(--font-terminal);
-  font-size: 20px;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
   color: ${colors.text};
   outline: none;
   width: 100%;
@@ -369,24 +268,20 @@ const StyledInput = styled.input`
 
 const InputSuffix = styled.span`
   padding: 0 12px;
-  font-family: var(--font-terminal);
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 0.813rem;
   color: ${colors.textMuted};
-  background-color: ${colors.bgLight};
-  height: 100%;
-  display: flex;
-  align-items: center;
 `;
 
 const CheckboxWrapper = styled.label`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
   padding: 8px 0;
 
-  &:hover span {
-    border-color: ${colors.neonCyan};
+  &:hover span:first-of-type {
+    border-color: ${colors.primary};
   }
 `;
 
@@ -395,31 +290,36 @@ const CheckboxInput = styled.input`
 
   &:checked + span {
     background-color: ${colors.primary};
-    border-color: ${colors.neonPink};
+    border-color: ${colors.primary};
 
     &::after {
-      content: 'X';
+      content: '';
       display: block;
-      color: ${colors.text};
-      font-family: var(--font-pixel);
-      font-size: 10px;
-      text-align: center;
-      line-height: 18px;
+      width: 5px;
+      height: 9px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      margin: 1px auto 0;
     }
   }
 `;
 
 const CheckboxBox = styled.span`
-  width: 24px;
-  height: 24px;
-  border: 3px solid ${colors.border};
-  background-color: ${colors.bg};
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid ${colors.border};
+  border-radius: 4px;
+  background-color: ${colors.bgCard};
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const CheckboxLabel = styled.span`
-  font-family: var(--font-terminal);
-  font-size: 18px;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
   color: ${colors.text};
 `;
 
@@ -433,23 +333,20 @@ const RadioLabel = styled.label<{ $checked: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 16px;
-  border: 3px solid ${props => props.$checked ? colors.neonPink : colors.border};
-  background-color: ${props => props.$checked ? colors.primary : colors.bg};
+  padding: 8px 16px;
+  border: 1px solid ${props => props.$checked ? colors.primary : colors.border};
+  background-color: ${props => props.$checked ? colors.primaryLight : colors.bgCard};
   cursor: pointer;
   transition: all 0.2s;
-  font-family: var(--font-pixel);
-  font-size: 8px;
-  color: ${props => props.$checked ? colors.text : colors.textMuted};
-  text-transform: uppercase;
-
-  ${props => props.$checked && css`
-    box-shadow: 0 0 10px ${colors.neonPink};
-    text-shadow: 0 0 5px ${colors.text};
-  `}
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: ${props => props.$checked ? colors.primary : colors.textMuted};
+  border-radius: 8px;
 
   &:hover {
-    border-color: ${colors.neonCyan};
+    border-color: ${colors.primary};
+    color: ${colors.primary};
   }
 
   input {
@@ -472,43 +369,46 @@ const SliderContainer = styled.div`
 const StyledSlider = styled.input`
   flex: 1;
   -webkit-appearance: none;
-  height: 8px;
-  background: ${colors.bg};
-  border: 2px solid ${colors.border};
+  height: 6px;
+  background: ${colors.border};
+  border: none;
+  border-radius: 4px;
   outline: none;
 
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    background: ${colors.neonGreen};
-    border: 3px solid ${colors.bgLight};
+    width: 18px;
+    height: 18px;
+    background: ${colors.primary};
+    border: 2px solid white;
+    border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 0 10px ${colors.neonGreen};
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   }
 
   &::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: ${colors.neonGreen};
-    border: 3px solid ${colors.bgLight};
+    width: 18px;
+    height: 18px;
+    background: ${colors.primary};
+    border: 2px solid white;
+    border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 0 10px ${colors.neonGreen};
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   }
 `;
 
 const SliderValue = styled.span`
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  color: ${colors.neonYellow};
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  color: ${colors.primary};
+  font-weight: 600;
   min-width: 40px;
   text-align: right;
-  text-shadow: 0 0 5px ${colors.neonYellow};
 `;
 
 const HelpText = styled.p`
-  font-family: var(--font-terminal);
-  font-size: 14px;
+  font-family: var(--font-body);
+  font-size: 0.813rem;
   color: ${colors.textMuted};
   margin-top: 8px;
 `;
@@ -527,11 +427,11 @@ const InfoGrid = styled.div`
 const InfoBlock = styled.div``;
 
 const InfoTitle = styled.h3`
-  font-family: var(--font-pixel);
-  font-size: 8px;
-  color: ${colors.neonCyan};
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  color: ${colors.textMuted};
+  font-weight: 600;
   margin-bottom: 12px;
-  text-shadow: 0 0 5px ${colors.neonCyan};
 
   @media (min-width: 1024px) {
     margin-top: 16px;
@@ -551,22 +451,23 @@ const InfoRow = styled.div`
 `;
 
 const InfoLabel = styled.dt`
-  font-family: var(--font-terminal);
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
   color: ${colors.textMuted};
 `;
 
 const InfoValue = styled.dd`
-  font-family: var(--font-terminal);
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
   color: ${colors.text};
+  font-weight: 500;
 `;
 
 const SavedValue = styled.dd<{ $positive: boolean }>`
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  color: ${props => props.$positive ? colors.neonGreen : colors.neonPink};
-  text-shadow: 0 0 5px ${props => props.$positive ? colors.neonGreen : colors.neonPink};
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: ${props => props.$positive ? colors.success : colors.error};
 `;
 
 const PreviewSection = styled.div`
@@ -577,11 +478,7 @@ const PreviewSection = styled.div`
   }
 `;
 
-const PreviewCard = styled(Card)`
-  &::before {
-    background: linear-gradient(90deg, ${colors.neonPink}, ${colors.primary});
-  }
-`;
+const PreviewCard = styled(Card)``;
 
 const PreviewHeader = styled.div`
   display: flex;
@@ -597,19 +494,19 @@ const PreviewHeader = styled.div`
 `;
 
 const PreviewTitle = styled.h2`
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  color: ${colors.neonPink};
-  text-shadow: 0 0 5px ${colors.neonPink};
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  color: ${colors.text};
+  font-weight: 700;
 `;
 
 const PreviewInfo = styled.span`
-  font-family: var(--font-terminal);
-  font-size: 14px;
+  font-family: var(--font-body);
+  font-size: 0.813rem;
   color: ${colors.textMuted};
 
   @media (min-width: 640px) {
-    font-size: 16px;
+    font-size: 0.875rem;
   }
 `;
 
@@ -618,7 +515,8 @@ const PreviewContainer = styled.div`
   align-items: center;
   justify-content: center;
   background-color: ${colors.bg};
-  border: 3px solid ${colors.border};
+  border: 1px solid ${colors.border};
+  border-radius: 12px;
   padding: 8px;
   position: relative;
 
@@ -631,7 +529,7 @@ const PreviewImage = styled.img`
   max-height: 250px;
   max-width: 100%;
   object-fit: contain;
-  image-rendering: pixelated;
+  border-radius: 8px;
 
   @media (min-width: 640px) {
     max-height: 400px;
@@ -640,11 +538,6 @@ const PreviewImage = styled.img`
   @media (min-width: 1024px) {
     max-height: 500px;
   }
-`;
-
-const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 `;
 
 const ProcessingOverlay = styled.div`
@@ -657,30 +550,31 @@ const ProcessingOverlay = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: rgba(15, 15, 35, 0.75);
+  background-color: rgba(248, 250, 252, 0.8);
+  border-radius: 12px;
   z-index: 10;
   gap: 12px;
 `;
 
 const ProcessingSpinner = styled.div`
-  width: 40px;
-  height: 40px;
-  border: 4px solid ${colors.border};
-  border-top: 4px solid ${colors.neonCyan};
+  width: 36px;
+  height: 36px;
+  border: 3px solid ${colors.border};
+  border-top: 3px solid ${colors.primary};
+  border-radius: 50%;
   animation: ${spin} 0.8s linear infinite;
 `;
 
 const ProcessingLabel = styled.span`
-  font-family: var(--font-pixel);
-  font-size: 10px;
-  color: ${colors.neonCyan};
-  text-shadow: 0 0 10px ${colors.neonCyan};
-  letter-spacing: 2px;
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  color: ${colors.primary};
+  font-weight: 600;
 `;
 
 const FileName = styled.p`
-  font-family: var(--font-terminal);
-  font-size: 14px;
+  font-family: var(--font-body);
+  font-size: 0.813rem;
   color: ${colors.textMuted};
   margin-top: 8px;
   white-space: nowrap;
@@ -688,9 +582,49 @@ const FileName = styled.p`
   text-overflow: ellipsis;
 
   @media (min-width: 640px) {
-    font-size: 16px;
+    font-size: 0.875rem;
     margin-top: 12px;
   }
+`;
+
+const SuccessOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(248, 250, 252, 0.95);
+  z-index: 100;
+  gap: 16px;
+`;
+
+const SuccessIcon = styled.div`
+  width: 64px;
+  height: 64px;
+  background: ${colors.success};
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 32px;
+`;
+
+const SuccessTitle = styled.h2`
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  color: ${colors.text};
+  font-weight: 700;
+`;
+
+const SuccessCountdown = styled.p`
+  font-family: var(--font-body);
+  font-size: 0.938rem;
+  color: ${colors.textMuted};
 `;
 
 const LoadingContainer = styled.div`
@@ -702,15 +636,10 @@ const LoadingContainer = styled.div`
 `;
 
 const LoadingText = styled.div`
-  font-family: var(--font-pixel);
-  font-size: 12px;
-  color: ${colors.neonCyan};
-  text-shadow: 0 0 10px ${colors.neonCyan};
-  animation: ${blink} 1s infinite;
-`;
-
-const BlinkingCursor = styled.span`
-  animation: ${blink} 0.7s infinite;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: ${colors.primary};
+  font-weight: 600;
 `;
 
 interface StoredImageInfo {
@@ -857,6 +786,10 @@ export default function EditorPage() {
   const [lastProcessedKey, setLastProcessedKey] = useState('');
   const processCounterRef = useRef(0);
 
+  // Download success state
+  const [downloadComplete, setDownloadComplete] = useState(false);
+  const [countdown, setCountdown] = useState(3);
+
   // Debounced values for auto-preview
   const debouncedWidth = useDebounce(width, 500);
   const debouncedHeight = useDebounce(height, 500);
@@ -960,11 +893,27 @@ export default function EditorPage() {
       });
   }, [imageDataUrl, imageInfo, isLoading, debouncedWidth, debouncedHeight, debouncedFormat, debouncedQuality, keepAspectRatio]);
 
-  // Download the already-processed image
+  // Download
   const handleDownload = useCallback(() => {
     if (!processedImage || !imageInfo) return;
     downloadImage(processedImage.blob, imageInfo.name, format);
+    setDownloadComplete(true);
+    setCountdown(3);
   }, [processedImage, imageInfo, format]);
+
+  // Countdown after download
+  useEffect(() => {
+    if (!downloadComplete) return;
+    if (countdown <= 0) {
+      sessionStorage.removeItem('pendingImage');
+      removeImageData(STORAGE_KEYS.PENDING_IMAGE_DATA);
+      if (processedImage?.url) URL.revokeObjectURL(processedImage.url);
+      router.push('/');
+      return;
+    }
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [downloadComplete, countdown, router, processedImage]);
 
   // Reset to original
   const handleReset = useCallback(() => {
@@ -995,7 +944,7 @@ export default function EditorPage() {
   if (isLoading) {
     return (
       <LoadingContainer>
-        <LoadingText>{tc('loading')}<BlinkingCursor>_</BlinkingCursor></LoadingText>
+        <LoadingText>{tc('loading')}...</LoadingText>
       </LoadingContainer>
     );
   }
@@ -1033,12 +982,12 @@ export default function EditorPage() {
             <Title>{t('title')}</Title>
           </HeaderLeft>
           <HeaderRight>
-            <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
+            <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
               {tc('reset')}
-            </PixelButton>
-            <PixelButton $size="sm" onClick={handleDownload} disabled={!processedImage || isPreviewProcessing}>
+            </ActionButton>
+            <ActionButton $size="sm" onClick={handleDownload} disabled={!processedImage || isPreviewProcessing}>
               {isPreviewProcessing ? '...' : tc('download')}
-            </PixelButton>
+            </ActionButton>
           </HeaderRight>
         </HeaderContent>
       </Header>
@@ -1220,6 +1169,18 @@ export default function EditorPage() {
           </PreviewCard>
         </PreviewSection>
       </Main>
+
+      {downloadComplete && (
+        <SuccessOverlay>
+          <SuccessIcon>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </SuccessIcon>
+          <SuccessTitle>{t('downloadSuccess')}</SuccessTitle>
+          <SuccessCountdown>{t('redirecting', { seconds: countdown })}</SuccessCountdown>
+        </SuccessOverlay>
+      )}
     </PageContainer>
   );
 }

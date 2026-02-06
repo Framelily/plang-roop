@@ -3,71 +3,72 @@
 import { InputHTMLAttributes, forwardRef } from 'react';
 import styled from 'styled-components';
 
-// Pixel Art Color Palette
+// Soft UI Evolution Palette
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  bgCard: '#16213e',
-  neonCyan: '#01CDFE',
-  neonPink: '#FF71CE',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  bgCard: '#FFFFFF',
+  primary: '#3B82F6',
+  text: '#1E293B',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
 };
 
 const InputWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 6px;
 `;
 
 const Label = styled.label`
-  font-family: var(--font-pixel);
-  font-size: 0.5rem;
-  color: ${colors.neonCyan};
-  text-transform: uppercase;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  color: ${colors.textMuted};
+  font-weight: 600;
 `;
 
 const InputContainer = styled.div`
-  position: relative;
   display: flex;
   align-items: center;
+  background-color: ${colors.bgCard};
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
+  transition: all 0.2s;
+
+  &:focus-within {
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
 `;
 
-const StyledInput = styled.input<{ $hasSuffix?: boolean }>`
-  width: 100%;
-  padding: 0.625rem 0.75rem;
-  padding-right: ${({ $hasSuffix }) => ($hasSuffix ? '3rem' : '0.75rem')};
-  background: ${colors.bgLight};
-  border: 2px solid ${colors.border};
+const StyledInput = styled.input`
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
   color: ${colors.text};
-  font-family: var(--font-terminal);
-  font-size: 1.125rem;
-  transition: all 0.2s;
+  outline: none;
+  width: 100%;
 
   &::placeholder {
     color: ${colors.textMuted};
   }
 
-  &:focus {
-    outline: none;
-    border-color: ${colors.neonCyan};
-    box-shadow: 0 0 10px ${colors.neonCyan}40;
-  }
-
-  &::-webkit-inner-spin-button,
-  &::-webkit-outer-spin-button {
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
-  -moz-appearance: textfield;
+
+  &[type=number] {
+    -moz-appearance: textfield;
+  }
 `;
 
 const Suffix = styled.span`
-  position: absolute;
-  right: 0.75rem;
-  font-family: var(--font-terminal);
-  font-size: 1rem;
+  padding: 0 12px;
+  font-family: var(--font-body);
+  font-size: 0.813rem;
   color: ${colors.textMuted};
 `;
 
@@ -85,7 +86,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <StyledInput
             ref={ref}
             id={id}
-            $hasSuffix={!!suffix}
             {...props}
           />
           {suffix && <Suffix>{suffix}</Suffix>}

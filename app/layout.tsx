@@ -1,33 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Press_Start_2P, VT323, Sarabun } from "next/font/google";
+import { Varela_Round, Nunito_Sans, Sarabun } from "next/font/google";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import StyledComponentsRegistry from "@/lib/registry";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const pressStart2P = Press_Start_2P({
+const varelaRound = Varela_Round({
   weight: "400",
-  variable: "--font-pixel",
+  variable: "--font-heading",
   subsets: ["latin"],
   display: "swap",
 });
 
-const vt323 = VT323({
-  weight: "400",
-  variable: "--font-terminal",
+const nunitoSans = Nunito_Sans({
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
   subsets: ["latin"],
   display: "swap",
 });
@@ -78,15 +67,13 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${pressStart2P.variable} ${vt323.variable} ${sarabun.variable} antialiased`}
+        className={`${varelaRound.variable} ${nunitoSans.variable} ${sarabun.variable} antialiased`}
       >
         <StyledComponentsRegistry>
           <AntdRegistry>
             <NextIntlClientProvider messages={messages}>
-              <ThemeProvider>
-                <ServiceWorkerRegistration />
-                {children}
-              </ThemeProvider>
+              <ServiceWorkerRegistration />
+              {children}
             </NextIntlClientProvider>
           </AntdRegistry>
         </StyledComponentsRegistry>

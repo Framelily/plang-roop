@@ -2,32 +2,21 @@
 
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import { useTranslations } from 'next-intl';
 import { ACCEPTED_FILE_TYPES, MAX_FILE_SIZE } from '@/lib/types';
 
-// Pixel Art Color Palette
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  bgCard: '#16213e',
-  neonPink: '#FF71CE',
-  neonCyan: '#01CDFE',
-  neonGreen: '#05FFA1',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  bg: '#F8FAFC',
+  bgCard: '#FFFFFF',
+  primary: '#3B82F6',
+  primaryLight: '#DBEAFE',
+  text: '#1E293B',
+  textMuted: '#64748B',
+  border: '#CBD5E1',
+  borderLight: '#E2E8F0',
+  success: '#22C55E',
 };
-
-const blink = keyframes`
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-`;
-
-const pulse = keyframes`
-  0%, 100% { box-shadow: 0 0 10px ${colors.neonCyan}40; }
-  50% { box-shadow: 0 0 20px ${colors.neonCyan}80; }
-`;
 
 interface DropZoneContainerProps {
   $isDragActive: boolean;
@@ -42,18 +31,18 @@ const DropZoneContainer = styled.div<DropZoneContainerProps>`
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: ${colors.bgCard};
-  border: 3px dashed ${({ $isDragActive, $isDragReject }) =>
-    $isDragReject ? colors.neonPink : $isDragActive ? colors.neonCyan : colors.border};
+  background: ${({ $isDragActive }) => ($isDragActive ? colors.primaryLight : colors.bgCard)};
+  border: 2px dashed ${({ $isDragActive, $isDragReject }) =>
+    $isDragReject ? '#EF4444' : $isDragActive ? colors.primary : colors.border};
+  border-radius: 16px;
   cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
   opacity: ${({ $disabled }) => ($disabled ? 0.5 : 1)};
-  transition: all 0.2s;
-  box-shadow: ${({ $isDragActive }) =>
-    $isDragActive ? `0 0 20px ${colors.neonCyan}60` : `inset 0 0 30px ${colors.bg}80`};
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
   &:hover {
-    border-color: ${colors.neonCyan};
-    box-shadow: 0 0 15px ${colors.neonCyan}40;
+    border-color: ${colors.primary};
+    background: ${colors.primaryLight};
   }
 `;
 
@@ -63,14 +52,15 @@ const CompactContainer = styled.div<{ $isDragActive: boolean; $disabled: boolean
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   background: ${colors.bgCard};
-  border: 2px dashed ${({ $isDragActive }) => ($isDragActive ? colors.neonCyan : colors.border)};
+  border: 2px dashed ${({ $isDragActive }) => ($isDragActive ? colors.primary : colors.borderLight)};
+  border-radius: 12px;
   cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
   opacity: ${({ $disabled }) => ($disabled ? 0.5 : 1)};
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 
   &:hover {
-    border-color: ${colors.neonCyan};
-    background: ${colors.bgLight};
+    border-color: ${colors.primary};
+    background: ${colors.primaryLight};
   }
 `;
 
@@ -80,34 +70,26 @@ const IconContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${colors.bgLight};
-  border: 2px solid ${colors.border};
+  background: ${colors.primaryLight};
+  border-radius: 50%;
   margin-bottom: 1rem;
-
-  /* Pixel corners */
-  clip-path: polygon(
-    0% 15%, 15% 15%, 15% 0%,
-    85% 0%, 85% 15%, 100% 15%,
-    100% 85%, 85% 85%, 85% 100%,
-    15% 100%, 15% 85%, 0% 85%
-  );
 `;
 
 const Icon = styled.svg`
   width: 32px;
   height: 32px;
-  color: ${colors.neonCyan};
+  color: ${colors.primary};
 `;
 
 const SmallIcon = styled.svg`
   width: 16px;
   height: 16px;
-  color: ${colors.neonCyan};
+  color: ${colors.primary};
 `;
 
 const Title = styled.p`
-  font-family: var(--font-pixel);
-  font-size: 0.625rem;
+  font-family: var(--font-heading);
+  font-size: 1rem;
   color: ${colors.text};
   text-align: center;
   margin: 0 0 0.5rem;
@@ -115,34 +97,24 @@ const Title = styled.p`
 `;
 
 const Subtitle = styled.p`
-  font-family: var(--font-terminal);
-  font-size: 1.125rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
   color: ${colors.textMuted};
   text-align: center;
   margin: 0 0 0.5rem;
 `;
 
 const SupportText = styled.p`
-  font-family: var(--font-terminal);
-  font-size: 0.875rem;
-  color: ${colors.neonGreen};
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: ${colors.textMuted};
   margin: 0;
-
-  &::before {
-    content: '> ';
-    color: ${colors.neonPink};
-  }
 `;
 
 const CompactText = styled.span`
-  font-family: var(--font-terminal);
-  font-size: 1rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
   color: ${colors.textMuted};
-`;
-
-const BlinkingCursor = styled.span`
-  animation: ${blink} 1s infinite;
-  color: ${colors.neonCyan};
 `;
 
 interface DropZoneProps {
@@ -226,7 +198,7 @@ export default function DropZone({
 
       {isDragActive ? (
         <Title>
-          {multiple ? t('dropFiles') : t('dropFile')}<BlinkingCursor>_</BlinkingCursor>
+          {multiple ? t('dropFiles') : t('dropFile')}
         </Title>
       ) : (
         <>

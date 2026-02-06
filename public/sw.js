@@ -1,4 +1,4 @@
-const CACHE_NAME = 'plang-roop-v1';
+const CACHE_NAME = 'plang-roop-v3';
 const STATIC_ASSETS = [
   '/',
   '/editor',

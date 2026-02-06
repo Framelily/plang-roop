@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import styled, { keyframes, css } from 'styled-components';
+import styled from 'styled-components';
 import { useTranslations } from 'next-intl';
 import DropZone from '@/components/DropZone';
 import ProgressBar from '@/components/ProgressBar';
@@ -13,128 +13,32 @@ import { fitToSquare, generateAllFavicons, generateHtmlTags, type GeneratedFavic
 import { createFaviconZip } from '@/lib/favicon/zip';
 import { FAVICON_SIZES } from '@/lib/favicon/sizes';
 
+// Soft UI Evolution Palette
 const colors = {
-  bg: '#0F0F23',
-  bgLight: '#1a1a2e',
-  bgCard: '#16213e',
-  primary: '#A855F7',
-  neonPink: '#FF71CE',
-  neonCyan: '#01CDFE',
-  neonGreen: '#05FFA1',
-  neonYellow: '#FFFB96',
-  text: '#E2E8F0',
-  textMuted: '#94A3B8',
-  border: '#2D3748',
+  bg: '#F8FAFC',
+  bgCard: '#FFFFFF',
+  primary: '#3B82F6',
+  primaryLight: '#DBEAFE',
+  success: '#22C55E',
+  text: '#1E293B',
+  textMuted: '#64748B',
+  border: '#E2E8F0',
 };
-
-// Keyframe animations
-const scanline = keyframes`
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(100%);
-  }
-`;
-
-const blink = keyframes`
-  0%, 50% {
-    opacity: 1;
-  }
-  51%, 100% {
-    opacity: 0;
-  }
-`;
-
-const glitch = keyframes`
-  0% {
-    transform: translate(0);
-    text-shadow: -2px 0 ${colors.neonCyan}, 2px 0 ${colors.neonPink};
-  }
-  20% {
-    transform: translate(-2px, 2px);
-    text-shadow: 2px 0 ${colors.neonCyan}, -2px 0 ${colors.neonPink};
-  }
-  40% {
-    transform: translate(-2px, -2px);
-    text-shadow: 2px 0 ${colors.neonPink}, -2px 0 ${colors.neonCyan};
-  }
-  60% {
-    transform: translate(2px, 2px);
-    text-shadow: -2px 0 ${colors.neonPink}, 2px 0 ${colors.neonCyan};
-  }
-  80% {
-    transform: translate(2px, -2px);
-    text-shadow: -2px 0 ${colors.neonCyan}, 2px 0 ${colors.neonPink};
-  }
-  100% {
-    transform: translate(0);
-    text-shadow: -2px 0 ${colors.neonCyan}, 2px 0 ${colors.neonPink};
-  }
-`;
 
 const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background-color: ${colors.bg};
-  font-family: var(--font-terminal);
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.3) 2px,
-      rgba(0, 0, 0, 0.3) 4px
-    );
-    pointer-events: none;
-    z-index: 1000;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 100%;
-    background: linear-gradient(
-      transparent 50%,
-      rgba(0, 0, 0, 0.1) 50%
-    );
-    background-size: 100% 4px;
-    animation: ${scanline} 8s linear infinite;
-    pointer-events: none;
-    z-index: 1001;
-    opacity: 0.1;
-  }
+  font-family: var(--font-body);
 `;
 
 const Header = styled.header`
-  border-bottom: 4px solid ${colors.border};
-  background-color: ${colors.bgLight};
+  background-color: ${colors.bgCard};
+  border-bottom: 1px solid ${colors.border};
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   position: relative;
   z-index: 1;
-  image-rendering: pixelated;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, ${colors.neonCyan}, ${colors.neonPink}, ${colors.primary});
-  }
 `;
 
 const HeaderContent = styled.div`
@@ -171,14 +75,15 @@ const BackButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  font-family: var(--font-terminal);
-  font-size: 1rem;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
   transition: all 0.2s;
   padding: 0.5rem;
+  border-radius: 8px;
 
   &:hover {
-    color: ${colors.neonCyan};
-    text-shadow: 0 0 10px ${colors.neonCyan};
+    color: ${colors.primary};
+    background: ${colors.primaryLight};
   }
 
   svg {
@@ -195,14 +100,13 @@ const BackButton = styled.button`
   }
 
   @media (min-width: 640px) {
-    font-size: 1.25rem;
     gap: 0.5rem;
   }
 `;
 
 const Divider = styled.div`
   display: none;
-  width: 4px;
+  width: 1px;
   height: 1.5rem;
   background: ${colors.border};
 
@@ -212,20 +116,17 @@ const Divider = styled.div`
 `;
 
 const Title = styled.h1`
-  font-family: var(--font-pixel);
-  font-size: 0.625rem;
-  color: ${colors.neonPink};
-  text-shadow: 0 0 10px ${colors.neonPink}, 0 0 20px ${colors.neonPink};
-  animation: ${glitch} 3s infinite;
-  letter-spacing: 1px;
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  color: ${colors.text};
+  font-weight: 700;
 
   @media (min-width: 480px) {
-    font-size: 0.75rem;
-    letter-spacing: 2px;
+    font-size: 1rem;
   }
 
   @media (min-width: 640px) {
-    font-size: 1rem;
+    font-size: 1.125rem;
   }
 `;
 
@@ -235,55 +136,38 @@ const HeaderRight = styled.div`
   gap: 0.75rem;
 `;
 
-const PixelButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
-  font-family: var(--font-pixel);
-  font-size: ${props => props.$size === 'sm' ? '0.5rem' : '0.625rem'};
-  padding: ${props => props.$size === 'sm' ? '0.5rem 0.75rem' : '0.75rem 1rem'};
-  border: 4px solid;
+const ActionButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
+  font-family: var(--font-heading);
+  font-size: ${props => props.$size === 'sm' ? '0.813rem' : '0.875rem'};
+  padding: ${props => props.$size === 'sm' ? '8px 16px' : '10px 20px'};
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.1s;
-  image-rendering: pixelated;
-  position: relative;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  transition: all 0.2s;
+  font-weight: 600;
 
-  ${props => props.$variant === 'outline' ? css`
+  ${props => props.$variant === 'outline' ? `
     background: transparent;
-    border-color: ${colors.neonCyan};
-    color: ${colors.neonCyan};
-    box-shadow:
-      4px 4px 0 ${colors.border},
-      inset 0 0 20px rgba(1, 205, 254, 0.1);
+    border: 1px solid ${colors.border};
+    color: ${colors.textMuted};
 
     &:hover:not(:disabled) {
-      background: rgba(1, 205, 254, 0.2);
-      box-shadow:
-        4px 4px 0 ${colors.border},
-        0 0 20px ${colors.neonCyan},
-        inset 0 0 20px rgba(1, 205, 254, 0.2);
-      text-shadow: 0 0 10px ${colors.neonCyan};
+      border-color: ${colors.primary};
+      color: ${colors.primary};
+      background: ${colors.primaryLight};
     }
-  ` : css`
-    background: linear-gradient(180deg, ${colors.primary} 0%, #7C3AED 100%);
-    border-color: ${colors.neonPink};
-    color: ${colors.text};
-    box-shadow:
-      4px 4px 0 ${colors.border},
-      inset 0 0 20px rgba(168, 85, 247, 0.3);
+  ` : `
+    background: ${colors.primary};
+    border: 1px solid ${colors.primary};
+    color: white;
 
     &:hover:not(:disabled) {
-      background: linear-gradient(180deg, #B366FF 0%, ${colors.primary} 100%);
-      box-shadow:
-        4px 4px 0 ${colors.border},
-        0 0 20px ${colors.neonPink},
-        inset 0 0 20px rgba(168, 85, 247, 0.5);
-      text-shadow: 0 0 10px ${colors.neonPink};
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
   `}
 
   &:active:not(:disabled) {
-    transform: translate(4px, 4px);
-    box-shadow: none;
+    transform: translateY(0);
   }
 
   &:disabled {
@@ -317,62 +201,51 @@ const SectionHeader = styled.div`
 `;
 
 const SectionTitle = styled.h2`
-  font-family: var(--font-pixel);
-  font-size: 1rem;
-  color: ${colors.neonGreen};
-  text-shadow: 0 0 10px ${colors.neonGreen}, 0 0 20px ${colors.neonGreen};
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  color: ${colors.text};
+  font-weight: 700;
   margin-bottom: 0.5rem;
 
   @media (min-width: 640px) {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
   }
 `;
 
 const SectionSubtitle = styled.p`
-  font-family: var(--font-terminal);
-  font-size: 1rem;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
   color: ${colors.textMuted};
 
   @media (min-width: 640px) {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
 `;
 
-const PixelCard = styled.div`
+const SoftCard = styled.div`
   background: ${colors.bgCard};
-  border: 4px solid ${colors.border};
+  border: 1px solid ${colors.border};
+  border-radius: 16px;
   padding: 0.75rem;
-  position: relative;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
   @media (min-width: 640px) {
-    padding: 1rem;
-    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.5);
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, ${colors.neonCyan}, ${colors.neonPink});
+    padding: 1.25rem;
   }
 `;
 
 const CardTitle = styled.h3`
-  font-family: var(--font-pixel);
-  font-size: 0.625rem;
-  color: ${colors.neonYellow};
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  color: ${colors.text};
+  font-weight: 700;
   margin-bottom: 0.75rem;
-  text-shadow: 0 0 5px ${colors.neonYellow};
 `;
 
 const FeatureList = styled.ul`
   display: grid;
   gap: 0.5rem;
-  font-size: 1.125rem;
+  font-size: 0.938rem;
   color: ${colors.textMuted};
 
   @media (min-width: 640px) {
@@ -384,12 +257,12 @@ const FeatureItem = styled.li`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--font-terminal);
+  font-family: var(--font-body);
 
   svg {
     width: 1rem;
     height: 1rem;
-    color: ${colors.neonGreen};
+    color: ${colors.success};
     flex-shrink: 0;
   }
 `;
@@ -413,8 +286,9 @@ const ImagePreviewContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${colors.bgLight};
-  border: 2px dashed ${colors.border};
+  background: ${colors.bg};
+  border: 1px solid ${colors.border};
+  border-radius: 12px;
   padding: 1rem;
   min-height: 200px;
 `;
@@ -423,21 +297,22 @@ const SourceImage = styled.img`
   max-height: 200px;
   max-width: 100%;
   object-fit: contain;
-  image-rendering: pixelated;
+  border-radius: 8px;
 `;
 
 const ImageInfo = styled.p`
   margin-top: 0.5rem;
-  font-family: var(--font-terminal);
-  font-size: 1rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
   color: ${colors.textMuted};
 `;
 
 const PlaceholderText = styled.p`
-  font-family: var(--font-terminal);
-  font-size: 1.25rem;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
   color: ${colors.textMuted};
   text-align: center;
+  padding: 2rem 0;
 `;
 
 const SettingsContainer = styled.div`
@@ -462,27 +337,28 @@ const InputWrapper = styled.div`
 
 const InputLabel = styled.label`
   display: block;
-  font-family: var(--font-pixel);
-  font-size: 0.5rem;
-  color: ${colors.neonCyan};
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  color: ${colors.textMuted};
+  font-weight: 600;
   margin-bottom: 0.5rem;
-  text-shadow: 0 0 5px ${colors.neonCyan};
 `;
 
-const PixelInput = styled.input`
+const SoftInput = styled.input`
   width: 100%;
-  padding: 0.75rem;
-  font-family: var(--font-terminal);
-  font-size: 1.25rem;
-  background: ${colors.bgLight};
-  border: 4px solid ${colors.border};
+  padding: 0.625rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.938rem;
+  background: ${colors.bgCard};
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
   color: ${colors.text};
   outline: none;
   transition: all 0.2s;
 
   &:focus {
-    border-color: ${colors.neonCyan};
-    box-shadow: 0 0 10px ${colors.neonCyan};
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
   &::placeholder {
@@ -531,10 +407,10 @@ const HtmlCodeToggle = styled.button`
 `;
 
 const HtmlCodeTitle = styled.h3`
-  font-family: var(--font-pixel);
-  font-size: 0.625rem;
-  color: ${colors.neonYellow};
-  text-shadow: 0 0 5px ${colors.neonYellow};
+  font-family: var(--font-heading);
+  font-size: 0.813rem;
+  color: ${colors.text};
+  font-weight: 700;
 `;
 
 const ChevronIcon = styled.svg<{ $isOpen: boolean }>`
@@ -551,21 +427,22 @@ const HtmlCodeContent = styled.div`
 
 const CodeBlock = styled.pre`
   overflow-x: auto;
-  background: ${colors.bgLight};
-  border: 2px solid ${colors.border};
+  background: #F1F5F9;
+  border: 1px solid ${colors.border};
+  border-radius: 8px;
   padding: 0.75rem;
-  font-family: var(--font-terminal);
+  font-family: monospace;
   font-size: 0.75rem;
-  color: ${colors.neonGreen};
+  color: ${colors.text};
   line-height: 1.5;
 
   @media (min-width: 640px) {
     padding: 1rem;
-    font-size: 1rem;
+    font-size: 0.813rem;
   }
 `;
 
-const CopyButton = styled(PixelButton)`
+const CopyButton = styled(ActionButton)`
   margin-top: 0.75rem;
   width: 100%;
 
@@ -574,23 +451,7 @@ const CopyButton = styled(PixelButton)`
   }
 `;
 
-const DropZoneWrapper = styled.div`
-  .dropzone {
-    background: ${colors.bgCard};
-    border: 4px dashed ${colors.neonCyan};
-    transition: all 0.2s;
-
-    &:hover {
-      border-color: ${colors.neonPink};
-      box-shadow: 0 0 20px ${colors.neonPink};
-    }
-  }
-`;
-
-const BlinkingCursor = styled.span`
-  animation: ${blink} 1s step-end infinite;
-  color: ${colors.neonGreen};
-`;
+const DropZoneWrapper = styled.div``;
 
 interface ImageInfo {
   name: string;
@@ -708,9 +569,9 @@ export default function FaviconGeneratorPage() {
           </HeaderLeft>
           <HeaderRight>
             {favicons.length > 0 && (
-              <PixelButton $variant="outline" $size="sm" onClick={handleReset}>
+              <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
                 {tc('reset')}
-              </PixelButton>
+              </ActionButton>
             )}
           </HeaderRight>
         </HeaderContent>
@@ -721,7 +582,7 @@ export default function FaviconGeneratorPage() {
           <UploadSection>
             <SectionHeader>
               <SectionTitle>
-                {t('createTitle')}<BlinkingCursor>_</BlinkingCursor>
+                {t('createTitle')}
               </SectionTitle>
               <SectionSubtitle>
                 {t('createSubtitle')}
@@ -732,7 +593,7 @@ export default function FaviconGeneratorPage() {
               <DropZone onFileSelect={handleFileSelect} />
             </DropZoneWrapper>
 
-            <PixelCard>
+            <SoftCard>
               <CardTitle>{t('whatYouGet')}</CardTitle>
               <FeatureList>
                 {FAVICON_SIZES.map((size) => (
@@ -783,12 +644,12 @@ export default function FaviconGeneratorPage() {
                   {t('htmlTags')}
                 </FeatureItem>
               </FeatureList>
-            </PixelCard>
+            </SoftCard>
           </UploadSection>
         ) : (
           <EditorSection>
             <GridContainer>
-              <PixelCard>
+              <SoftCard>
                 <CardTitle>{t('sourceImage')}</CardTitle>
                 <ImagePreviewContainer>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -801,9 +662,9 @@ export default function FaviconGeneratorPage() {
                   {imageInfo.originalWidth} x {imageInfo.originalHeight}px
                   {!isSquare && ` ${t('willBeFitted')}`}
                 </ImageInfo>
-              </PixelCard>
+              </SoftCard>
 
-              <PixelCard>
+              <SoftCard>
                 {favicons.length > 0 ? (
                   <FaviconPreview favicons={favicons} />
                 ) : !isSquare ? (
@@ -814,19 +675,19 @@ export default function FaviconGeneratorPage() {
                   />
                 ) : (
                   <PlaceholderText>
-                    {t('clickToGenerate')}<BlinkingCursor>_</BlinkingCursor>
+                    {t('clickToGenerate')}
                   </PlaceholderText>
                 )}
-              </PixelCard>
+              </SoftCard>
             </GridContainer>
 
-            <PixelCard>
+            <SoftCard>
               <SettingsContainer>
                 <InputWrapper>
                   <InputLabel htmlFor="siteName">
                     {t('siteName')}
                   </InputLabel>
-                  <PixelInput
+                  <SoftInput
                     id="siteName"
                     value={siteName}
                     onChange={(e) => setSiteName(e.target.value)}
@@ -835,22 +696,22 @@ export default function FaviconGeneratorPage() {
                 </InputWrapper>
                 <ButtonGroup>
                   {favicons.length > 0 && (
-                    <PixelButton $variant="outline" onClick={handleReset}>
+                    <ActionButton $variant="outline" onClick={handleReset}>
                       {t('startOver')}
-                    </PixelButton>
+                    </ActionButton>
                   )}
-                  <PixelButton
+                  <ActionButton
                     onClick={handleGenerateAndDownload}
                     disabled={isProcessing}
                   >
                     {isProcessing ? t('generating') : t('downloadZip')}
-                  </PixelButton>
+                  </ActionButton>
                 </ButtonGroup>
               </SettingsContainer>
-            </PixelCard>
+            </SoftCard>
 
             {isProcessing && (
-              <PixelCard>
+              <SoftCard>
                 <ProgressContainer>
                   <ProgressBar
                     current={progress.current}
@@ -858,11 +719,11 @@ export default function FaviconGeneratorPage() {
                     label={t('generatingLabel', { name: progress.name })}
                   />
                 </ProgressContainer>
-              </PixelCard>
+              </SoftCard>
             )}
 
             {favicons.length > 0 && (
-              <PixelCard>
+              <SoftCard>
                 <HtmlCodeSection>
                   <HtmlCodeToggle
                     onClick={() => setShowHtmlCode(!showHtmlCode)}
@@ -899,7 +760,7 @@ export default function FaviconGeneratorPage() {
                     </HtmlCodeContent>
                   )}
                 </HtmlCodeSection>
-              </PixelCard>
+              </SoftCard>
             )}
           </EditorSection>
         )}
