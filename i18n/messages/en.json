@@ -102,9 +102,6 @@
     "format": "OUTPUT FORMAT",
     "quality": "QUALITY",
     "qualityHelp": "Lower quality = smaller file size (JPG & WebP)",
-    "reset": "Reset",
-    "download": "Download",
-    "processing": "Processing...",
     "invalidCrop": "Invalid crop area",
     "errorLoad": "Failed to load image. Please try another file.",
     "errorProcess": "Failed to process image. Please try again."
