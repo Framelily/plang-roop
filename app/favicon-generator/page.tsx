@@ -280,15 +280,14 @@ export default function FaviconGeneratorPage() {
     reader.readAsDataURL(file);
   }, []);
 
-  // Generate favicons (no download)
-  const handleGenerate = useCallback(async () => {
+  // Generate favicons and immediately download ZIP (one click)
+  const handleGenerateAndDownload = useCallback(async () => {
     if (!imageInfo) return;
 
     setIsProcessing(true);
     setProgress({ current: 0, total: FAVICON_SIZES.length, name: t('preparing') });
 
     try {
-      // Fit to square first
       const { url: squareUrl } = await fitToSquare(
         imageInfo.dataUrl,
         imageInfo.originalWidth,
@@ -296,7 +295,6 @@ export default function FaviconGeneratorPage() {
       );
       setCroppedUrl(squareUrl);
 
-      // Generate all sizes
       const generatedFavicons = await generateAllFavicons(
         squareUrl,
         (current, total, name) => {
@@ -305,22 +303,13 @@ export default function FaviconGeneratorPage() {
       );
 
       setFavicons(generatedFavicons);
+      await createFaviconZip(generatedFavicons, siteName);
     } catch (error) {
-      console.error('Favicon generation error:', error);
+      console.error('Favicon generate/zip error:', error);
     } finally {
       setIsProcessing(false);
     }
-  }, [imageInfo, t]);
-
-  // Download the generated favicons as ZIP
-  const handleDownloadZip = useCallback(async () => {
-    if (favicons.length === 0) return;
-    try {
-      await createFaviconZip(favicons, siteName);
-    } catch (error) {
-      console.error('Favicon zip error:', error);
-    }
-  }, [favicons, siteName]);
+  }, [imageInfo, siteName, t]);
 
   // Reset
   const handleReset = useCallback(() => {
@@ -562,26 +551,20 @@ export default function FaviconGeneratorPage() {
                   {t('startOver')}
                 </ActionButton>
               )}
-              {favicons.length === 0 ? (
-                <ActionButton
-                  $variant="primary"
-                  onClick={handleGenerate}
-                  disabled={!imageInfo || isProcessing}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Spinner />
-                      {t('generating')}
-                    </>
-                  ) : (
-                    t('generateButton')
-                  )}
-                </ActionButton>
-              ) : (
-                <ActionButton $variant="primary" onClick={handleDownloadZip}>
-                  {t('downloadZip')}
-                </ActionButton>
-              )}
+              <ActionButton
+                $variant="primary"
+                onClick={handleGenerateAndDownload}
+                disabled={!imageInfo || isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <Spinner />
+                    {t('generating')}
+                  </>
+                ) : (
+                  t('generateButton')
+                )}
+              </ActionButton>
             </PageActions>
           </SidePanel>
         </PageMain>
