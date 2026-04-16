@@ -12,11 +12,14 @@ export function isGifBytes(buffer: ArrayBuffer): boolean {
   return (fifth === 0x37 || fifth === 0x39) && sixth === 0x61;
 }
 
-export function countGifFrames(buffer: ArrayBuffer): number {
+export function hasLikelyMultipleFrames(buffer: ArrayBuffer): boolean {
   const view = new Uint8Array(buffer);
   let count = 0;
   for (let i = 13; i < view.length; i++) {
-    if (view[i] === IMAGE_DESCRIPTOR) count++;
+    if (view[i] === IMAGE_DESCRIPTOR) {
+      count++;
+      if (count > 1) return true;
+    }
   }
-  return count;
+  return false;
 }

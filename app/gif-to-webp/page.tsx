@@ -308,7 +308,12 @@ export default function GifToWebpPage() {
       <Main>
         <Container>
           {!source && (
-            <GifDropZone onFile={handleFile} disabled={busy} errorKey={dropErrorKey} />
+            <GifDropZone
+              onFile={handleFile}
+              onReject={(key) => setDropErrorKey(key)}
+              disabled={busy}
+              errorKey={dropErrorKey}
+            />
           )}
 
           {source && (

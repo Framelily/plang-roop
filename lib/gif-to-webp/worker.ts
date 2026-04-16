@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { getFFmpeg } from './ffmpegLoader';
-import { isGifBytes, countGifFrames } from './countGifFrames';
+import { isGifBytes, hasLikelyMultipleFrames } from './countGifFrames';
 import { isAnimatedWebp } from './validateAnimated';
 import type { GifToWebpOptions, WorkerInbound, WorkerOutbound } from './types';
 
@@ -32,7 +32,7 @@ async function convert(bytes: ArrayBuffer, options: GifToWebpOptions): Promise<v
     return;
   }
 
-  const sourceFrameCount = countGifFrames(bytes);
+  const sourceLikelyAnimated = hasLikelyMultipleFrames(bytes);
 
   let ffmpeg;
   try {
@@ -69,7 +69,7 @@ async function convert(bytes: ArrayBuffer, options: GifToWebpOptions): Promise<v
     const outputBuffer = new ArrayBuffer(outputBytes.byteLength);
     new Uint8Array(outputBuffer).set(outputBytes);
 
-    if (sourceFrameCount > 1 && !isAnimatedWebp(outputBuffer)) {
+    if (sourceLikelyAnimated && !isAnimatedWebp(outputBuffer)) {
       post({
         type: 'error',
         code: 'not_animated',
@@ -87,8 +87,8 @@ async function convert(bytes: ArrayBuffer, options: GifToWebpOptions): Promise<v
     });
   } finally {
     ffmpeg.off('progress', onProgress);
-    try { await ffmpeg.deleteFile('input.gif'); } catch { /* file may not exist */ }
-    try { await ffmpeg.deleteFile('output.webp'); } catch { /* file may not exist */ }
+    try { await ffmpeg.deleteFile('input.gif'); } catch { void 0; }
+    try { await ffmpeg.deleteFile('output.webp'); } catch { void 0; }
   }
 }
 

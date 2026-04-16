@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, type FileRejection } from 'react-dropzone';
 import styled from 'styled-components';
 import { useTranslations } from 'next-intl';
 import { MAX_GIF_SIZE } from '@/lib/gif-to-webp/types';
@@ -82,20 +82,32 @@ const ErrorText = styled.p`
 
 interface GifDropZoneProps {
   onFile: (file: File) => void;
+  onReject?: (errorKey: 'invalidFormat' | 'fileTooLarge') => void;
   disabled?: boolean;
   errorKey?: string | null;
 }
 
-export default function GifDropZone({ onFile, disabled = false, errorKey }: GifDropZoneProps) {
+export default function GifDropZone({
+  onFile,
+  onReject,
+  disabled = false,
+  errorKey,
+}: GifDropZoneProps) {
   const t = useTranslations('gifToWebp');
 
   const onDrop = useCallback(
-    (accepted: File[]) => {
+    (accepted: File[], rejections: FileRejection[]) => {
       if (accepted.length > 0) {
         onFile(accepted[0]);
+        return;
+      }
+      if (rejections.length > 0 && onReject) {
+        const errors = rejections[0].errors;
+        const tooLarge = errors.some((e) => e.code === 'file-too-large');
+        onReject(tooLarge ? 'fileTooLarge' : 'invalidFormat');
       }
     },
-    [onFile],
+    [onFile, onReject],
   );
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
