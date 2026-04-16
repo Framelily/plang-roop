@@ -82,4 +82,6 @@ export async function removeImageData(key: string): Promise<void> {
 export const STORAGE_KEYS = {
   PENDING_IMAGE_DATA: 'pendingImageData',
   BATCH_IMAGES: 'batchImages',
+  CROP_IMAGE: 'cropImage',
+  CROP_METADATA: 'cropMetadata',
 } as const;
