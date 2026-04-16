@@ -17,7 +17,7 @@ Eliminate header drift across PLANG-ROOP's interior pages. Today each page defin
 ## 3. Current Inconsistencies (baseline)
 
 | Page | Header type | Back button | Max-width | LanguageSwitcher |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `/editor` | floating sticky, 16px radius | "← Back" transparent | 72rem | no |
 | `/batch` | floating sticky, 16px radius | "← Back" transparent | 72rem | no |
 | `/favicon-generator` | flat, border-bottom only | "← Back" transparent | 64rem | no |
@@ -56,7 +56,7 @@ interface PageHeaderProps {
 
 ## 6. Layout
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │ [← Back]  [Title]  [subtitle]    [..actions]  [🌐 Lang] │
 │ ─ left-group ─────────────────    ─ right-group ─────── │
@@ -68,15 +68,18 @@ Mobile (<640px): left-group collapses — back button shows only `"←"`, subtit
 ## 7. File Changes
 
 **Create:**
+
 - `components/PageHeader.tsx` — shared component (~120 LOC incl. styled blocks).
 
 **Modify:**
+
 - `app/editor/page.tsx` — remove inline `HeaderWrap`, `Header`, `HeaderContent`, `HeaderLeft`, `BackButton`, `Title` styled-components; replace markup with `<PageHeader title=... onBack=... actions=... />`.
 - `app/batch/page.tsx` — same pattern.
 - `app/favicon-generator/page.tsx` — same pattern. Additionally: change main content container `max-width: 64rem` → `72rem`.
 - `app/crop/page.tsx` — replace inline header markup with `<PageHeader title={t('backTitle')} subtitle={meta.name} onBack={handleBack} />`.
 
 **Do not change:**
+
 - `app/page.tsx` (home) — custom layout, out of scope.
 - `components/LanguageSwitcher.tsx` — continue using as-is; `PageHeader` just embeds it.
 
@@ -95,6 +98,7 @@ The back button will render `"← " + t('common.back')` on desktop, just `"←"`
 ## 10. Testing / Verification
 
 No test framework in the project (per `CLAUDE.md`). Manual verification:
+
 - Each interior page shows the identical header card, sticky on scroll.
 - Back button navigates to `/`.
 - Language switcher toggles EN/TH on every page.
