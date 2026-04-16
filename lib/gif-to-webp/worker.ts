@@ -66,10 +66,8 @@ async function convert(bytes: ArrayBuffer, options: GifToWebpOptions): Promise<v
     }
     const output = await ffmpeg.readFile('output.webp');
     const outputBytes = output instanceof Uint8Array ? output : new Uint8Array(0);
-    const outputBuffer = outputBytes.buffer.slice(
-      outputBytes.byteOffset,
-      outputBytes.byteOffset + outputBytes.byteLength,
-    );
+    const outputBuffer = new ArrayBuffer(outputBytes.byteLength);
+    new Uint8Array(outputBuffer).set(outputBytes);
 
     if (sourceFrameCount > 1 && !isAnimatedWebp(outputBuffer)) {
       post({
