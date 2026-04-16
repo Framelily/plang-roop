@@ -14,6 +14,7 @@ import { loadImage } from '@/lib/image/resize';
 import { formatFileSize, generateId } from '@/lib/utils';
 import { getImageData, removeImageData, STORAGE_KEYS } from '@/lib/storage';
 import type { ImageFile, BatchOptions, ImageFormat } from '@/lib/types';
+import PageHeader from '@/components/PageHeader';
 
 // Soft UI Evolution Palette
 const colors = {
@@ -33,124 +34,6 @@ const PageContainer = styled.div`
   background-color: ${colors.bg};
   display: flex;
   flex-direction: column;
-`;
-
-const HeaderWrapper = styled.div`
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  padding: 12px 12px 0;
-
-  @media (min-width: 640px) {
-    padding: 16px 16px 0;
-  }
-`;
-
-const Header = styled.header`
-  background-color: ${colors.bgCard};
-  border: 1px solid ${colors.border};
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  max-width: 72rem;
-  margin: 0 auto;
-`;
-
-const HeaderContent = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 12px 16px;
-`;
-
-const HeaderLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  @media (min-width: 640px) {
-    gap: 1rem;
-  }
-`;
-
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: ${colors.textMuted};
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 0.938rem;
-  transition: all 0.2s;
-  padding: 0.5rem;
-  border-radius: 8px;
-
-  &:hover {
-    color: ${colors.primary};
-    background: ${colors.primaryLight};
-  }
-
-  @media (min-width: 640px) {
-    gap: 0.5rem;
-  }
-`;
-
-const BackIcon = styled.svg`
-  width: 1.25rem;
-  height: 1.25rem;
-`;
-
-const BackText = styled.span`
-  display: none;
-
-  @media (min-width: 640px) {
-    display: inline;
-  }
-`;
-
-const Divider = styled.div`
-  display: none;
-  width: 1px;
-  height: 1.5rem;
-  background: ${colors.border};
-
-  @media (min-width: 640px) {
-    display: block;
-  }
-`;
-
-const Title = styled.h1`
-  font-family: var(--font-heading);
-  font-size: 1rem;
-  color: ${colors.text};
-  font-weight: 700;
-
-  @media (min-width: 640px) {
-    font-size: 1.125rem;
-  }
-`;
-
-const ImageCount = styled.span`
-  font-family: var(--font-heading);
-  font-size: 0.813rem;
-  font-weight: 600;
-  padding: 0.25rem 0.75rem;
-  background: ${colors.primaryLight};
-  color: ${colors.primary};
-  border-radius: 20px;
-`;
-
-const HeaderRight = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  @media (min-width: 640px) {
-    gap: 0.75rem;
-  }
 `;
 
 const ActionButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
@@ -618,46 +501,27 @@ export default function BatchPage() {
   return (
     <PageContainer>
       {/* Header */}
-      <HeaderWrapper>
-        <Header>
-          <HeaderContent>
-            <HeaderLeft>
-              <BackButton onClick={handleBack}>
-                <BackIcon
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </BackIcon>
-                <BackText>{tc('back')}</BackText>
-              </BackButton>
-              <Divider />
-              <Title>{t('title')}</Title>
-              <ImageCount>{images.length}</ImageCount>
-            </HeaderLeft>
-            <HeaderRight>
-              {hasProcessedImages && (
-                <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
-                  {tc('reset')}
-                </ActionButton>
-              )}
-              <ActionButton
-                $size="sm"
-                onClick={handleProcessAndDownload}
-                disabled={isProcessing || images.length === 0}
-              >
-                {isProcessing ? tc('processing') : tc('download')}
+      <PageHeader
+        title={t('title')}
+        subtitle={String(images.length)}
+        onBack={handleBack}
+        actions={
+          <>
+            {hasProcessedImages && (
+              <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
+                {tc('reset')}
               </ActionButton>
-            </HeaderRight>
-          </HeaderContent>
-        </Header>
-      </HeaderWrapper>
+            )}
+            <ActionButton
+              $size="sm"
+              onClick={handleProcessAndDownload}
+              disabled={isProcessing || images.length === 0}
+            >
+              {isProcessing ? tc('processing') : tc('download')}
+            </ActionButton>
+          </>
+        }
+      />
 
       <Main>
         {/* Selected Images */}
