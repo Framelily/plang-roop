@@ -12,6 +12,10 @@ import { formatFileSize, getFormatFromMimeType } from '@/lib/utils';
 import { getImageData, removeImageData, STORAGE_KEYS } from '@/lib/storage';
 import type { ImageFormat, ProcessedImage } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
+import Input from '@/components/ui/Input';
+import Checkbox from '@/components/ui/Checkbox';
+import RadioGroup from '@/components/ui/RadioGroup';
+import Slider from '@/components/ui/Slider';
 
 // Soft UI Evolution Palette
 const colors = {
@@ -143,195 +147,6 @@ const InputGroup = styled.div`
     grid-template-columns: 1fr;
     gap: 16px;
   }
-`;
-
-const InputWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const InputLabel = styled.label`
-  font-family: var(--font-heading);
-  font-size: 0.75rem;
-  color: ${colors.textMuted};
-  font-weight: 600;
-`;
-
-const InputContainer = styled.div`
-  display: flex;
-  align-items: center;
-  background-color: ${colors.bgCard};
-  border: 1px solid ${colors.border};
-  border-radius: 8px;
-  transition: all 0.2s;
-
-  &:focus-within {
-    border-color: ${colors.primary};
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-`;
-
-const StyledInput = styled.input`
-  flex: 1;
-  background: transparent;
-  border: none;
-  padding: 10px 12px;
-  font-family: var(--font-body);
-  font-size: 0.938rem;
-  color: ${colors.text};
-  outline: none;
-  width: 100%;
-
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  &[type=number] {
-    -moz-appearance: textfield;
-  }
-`;
-
-const InputSuffix = styled.span`
-  padding: 0 12px;
-  font-family: var(--font-body);
-  font-size: 0.813rem;
-  color: ${colors.textMuted};
-`;
-
-const CheckboxWrapper = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  padding: 8px 0;
-
-  &:hover span:first-of-type {
-    border-color: ${colors.primary};
-  }
-`;
-
-const CheckboxInput = styled.input`
-  display: none;
-
-  &:checked + span {
-    background-color: ${colors.primary};
-    border-color: ${colors.primary};
-
-    &::after {
-      content: '';
-      display: block;
-      width: 5px;
-      height: 9px;
-      border: solid white;
-      border-width: 0 2px 2px 0;
-      transform: rotate(45deg);
-      margin: 1px auto 0;
-    }
-  }
-`;
-
-const CheckboxBox = styled.span`
-  width: 18px;
-  height: 18px;
-  border: 1.5px solid ${colors.border};
-  border-radius: 4px;
-  background-color: ${colors.bgCard};
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const CheckboxLabel = styled.span`
-  font-family: var(--font-body);
-  font-size: 0.938rem;
-  color: ${colors.text};
-`;
-
-const RadioGroupWrapper = styled.div`
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-`;
-
-const RadioLabel = styled.label<{ $checked: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border: 1px solid ${props => props.$checked ? colors.primary : colors.border};
-  background-color: ${props => props.$checked ? colors.primaryLight : colors.bgCard};
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: var(--font-heading);
-  font-size: 0.813rem;
-  font-weight: 600;
-  color: ${props => props.$checked ? colors.primary : colors.textMuted};
-  border-radius: 8px;
-
-  &:hover {
-    border-color: ${colors.primary};
-    color: ${colors.primary};
-  }
-
-  input {
-    display: none;
-  }
-`;
-
-const SliderWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const SliderContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
-
-const StyledSlider = styled.input`
-  flex: 1;
-  -webkit-appearance: none;
-  height: 6px;
-  background: ${colors.border};
-  border: none;
-  border-radius: 4px;
-  outline: none;
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    background: ${colors.primary};
-    border: 2px solid white;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  }
-
-  &::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    background: ${colors.primary};
-    border: 2px solid white;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  }
-`;
-
-const SliderValue = styled.span`
-  font-family: var(--font-heading);
-  font-size: 0.813rem;
-  color: ${colors.primary};
-  font-weight: 600;
-  min-width: 40px;
-  text-align: right;
 `;
 
 const HelpText = styled.p`
@@ -578,121 +393,6 @@ interface StoredImageInfo {
   type: string;
 }
 
-// Custom Input Component
-interface CustomInputProps {
-  id: string;
-  type?: string;
-  label: string;
-  suffix?: string;
-  value: number | string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  min?: number;
-  max?: number;
-}
-
-function CustomInput({ id, type = 'text', label, suffix, value, onChange, min, max }: CustomInputProps) {
-  return (
-    <InputWrapper>
-      <InputLabel htmlFor={id}>{label}</InputLabel>
-      <InputContainer>
-        <StyledInput
-          id={id}
-          type={type}
-          value={value}
-          onChange={onChange}
-          min={min}
-          max={max}
-        />
-        {suffix && <InputSuffix>{suffix}</InputSuffix>}
-      </InputContainer>
-    </InputWrapper>
-  );
-}
-
-// Custom Checkbox Component
-interface CustomCheckboxProps {
-  id: string;
-  label: string;
-  checked: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-function CustomCheckbox({ id, label, checked, onChange }: CustomCheckboxProps) {
-  return (
-    <CheckboxWrapper htmlFor={id}>
-      <CheckboxInput
-        type="checkbox"
-        id={id}
-        checked={checked}
-        onChange={onChange}
-      />
-      <CheckboxBox />
-      <CheckboxLabel>{label}</CheckboxLabel>
-    </CheckboxWrapper>
-  );
-}
-
-// Custom RadioGroup Component
-interface RadioOption {
-  value: string;
-  label: string;
-}
-
-interface CustomRadioGroupProps {
-  name: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: RadioOption[];
-}
-
-function CustomRadioGroup({ name, value, onChange, options }: CustomRadioGroupProps) {
-  return (
-    <RadioGroupWrapper>
-      {options.map((option) => (
-        <RadioLabel key={option.value} $checked={value === option.value}>
-          <input
-            type="radio"
-            name={name}
-            value={option.value}
-            checked={value === option.value}
-            onChange={() => onChange(option.value)}
-          />
-          {option.label}
-        </RadioLabel>
-      ))}
-    </RadioGroupWrapper>
-  );
-}
-
-// Custom Slider Component
-interface CustomSliderProps {
-  id: string;
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-function CustomSlider({ id, min, max, step, value, onChange }: CustomSliderProps) {
-  return (
-    <SliderWrapper>
-      <SliderContainer>
-        <StyledSlider
-          type="range"
-          id={id}
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={onChange}
-        />
-        <SliderValue>{value}%</SliderValue>
-      </SliderContainer>
-    </SliderWrapper>
-  );
-}
-
 export default function EditorPage() {
   const router = useRouter();
   const t = useTranslations('editor');
@@ -915,7 +615,7 @@ export default function EditorPage() {
             <div>
               <SectionTitle>{t('resize')}</SectionTitle>
               <InputGroup>
-                <CustomInput
+                <Input
                   id="width"
                   type="number"
                   label={t('width')}
@@ -925,7 +625,7 @@ export default function EditorPage() {
                   min={1}
                   max={10000}
                 />
-                <CustomInput
+                <Input
                   id="height"
                   type="number"
                   label={t('height')}
@@ -937,7 +637,7 @@ export default function EditorPage() {
                 />
               </InputGroup>
               <div style={{ marginTop: '12px' }}>
-                <CustomCheckbox
+                <Checkbox
                   id="keepRatio"
                   label={t('keepAspectRatio')}
                   checked={keepAspectRatio}
@@ -951,7 +651,7 @@ export default function EditorPage() {
             {/* Format Section */}
             <div>
               <SectionTitle>{t('outputFormat')}</SectionTitle>
-              <CustomRadioGroup
+              <RadioGroup
                 name="format"
                 value={format}
                 onChange={(value) => setFormat(value as ImageFormat)}
@@ -968,7 +668,7 @@ export default function EditorPage() {
             {/* Quality Section */}
             <div>
               <SectionTitle>{t('quality')}</SectionTitle>
-              <CustomSlider
+              <Slider
                 id="quality"
                 min={10}
                 max={100}
@@ -987,7 +687,7 @@ export default function EditorPage() {
                 <SectionDivider />
                 <div>
                   <SectionTitle>{t('privacy')}</SectionTitle>
-                  <CustomCheckbox
+                  <Checkbox
                     id="stripExif"
                     label={t('stripExif')}
                     checked={stripExif}
