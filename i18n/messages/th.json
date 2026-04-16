@@ -23,6 +23,8 @@
     "featureBatchDesc": "ประมวลผลหลายไฟล์",
     "featureFavicon": "FAVICON",
     "featureFaviconDesc": "สร้างไอคอน",
+    "featureCrop": "ครอป",
+    "featureCropDesc": "ครอป หมุน พลิก",
     "footer": "ประมวลผลทั้งหมดในเบราว์เซอร์ ไม่ต้องอัพโหลดไปเซิร์ฟเวอร์",
     "errorLoad": "โหลดรูปภาพไม่สำเร็จ กรุณาลองไฟล์อื่น",
     "errorRead": "อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",

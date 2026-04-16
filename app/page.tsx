@@ -421,17 +421,19 @@ export default function Home() {
             {error && <ErrorMessage>{error}</ErrorMessage>}
 
             <FeaturesGrid>
-              {/* RESIZE */}
-              <FeatureCard>
+              {/* CROP */}
+              <FeatureCard
+                $clickable
+                onClick={() => router.push('/crop')}
+              >
                 <FeatureIcon $bgColor={colors.primaryLight} $color={colors.primary}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M14 10h4v4" />
-                    <path d="M10 14H6v-4" />
+                    <path d="M6 2v14a2 2 0 0 0 2 2h14" />
+                    <path d="M18 22V8a2 2 0 0 0-2-2H2" />
                   </svg>
                 </FeatureIcon>
-                <FeatureTitle>{t('featureResize')}</FeatureTitle>
-                <FeatureDesc>{t('featureResizeDesc')}</FeatureDesc>
+                <FeatureTitle>{t('featureCrop')}</FeatureTitle>
+                <FeatureDesc>{t('featureCropDesc')}</FeatureDesc>
               </FeatureCard>
               {/* CONVERT */}
               <FeatureCard>

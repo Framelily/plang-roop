@@ -23,6 +23,8 @@
     "featureBatchDesc": "Process multiple",
     "featureFavicon": "FAVICON",
     "featureFaviconDesc": "Generate icons",
+    "featureCrop": "CROP",
+    "featureCropDesc": "Crop, rotate, flip",
     "footer": "All processing happens in your browser. No upload required.",
     "errorLoad": "Failed to load image. Please try another file.",
     "errorRead": "Failed to read file. Please try again.",
