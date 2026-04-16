@@ -12,6 +12,7 @@ import { loadImage } from '@/lib/image/resize';
 import { fitToSquare, generateAllFavicons, generateHtmlTags, type GeneratedFavicon } from '@/lib/favicon/generator';
 import { createFaviconZip } from '@/lib/favicon/zip';
 import { FAVICON_SIZES } from '@/lib/favicon/sizes';
+import PageHeader from '@/components/PageHeader';
 
 // Soft UI Evolution Palette
 const colors = {
@@ -31,109 +32,6 @@ const PageContainer = styled.div`
   min-height: 100vh;
   background-color: ${colors.bg};
   font-family: var(--font-body);
-`;
-
-const Header = styled.header`
-  background-color: ${colors.bgCard};
-  border-bottom: 1px solid ${colors.border};
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  position: relative;
-  z-index: 1;
-`;
-
-const HeaderContent = styled.div`
-  max-width: 64rem;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-
-  @media (min-width: 640px) {
-    padding: 1rem;
-    flex-wrap: nowrap;
-  }
-`;
-
-const HeaderLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  @media (min-width: 640px) {
-    gap: 1rem;
-  }
-`;
-
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: ${colors.textMuted};
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 0.938rem;
-  transition: all 0.2s;
-  padding: 0.5rem;
-  border-radius: 8px;
-
-  &:hover {
-    color: ${colors.primary};
-    background: ${colors.primaryLight};
-  }
-
-  svg {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-
-  span {
-    display: none;
-
-    @media (min-width: 480px) {
-      display: inline;
-    }
-  }
-
-  @media (min-width: 640px) {
-    gap: 0.5rem;
-  }
-`;
-
-const Divider = styled.div`
-  display: none;
-  width: 1px;
-  height: 1.5rem;
-  background: ${colors.border};
-
-  @media (min-width: 480px) {
-    display: block;
-  }
-`;
-
-const Title = styled.h1`
-  font-family: var(--font-heading);
-  font-size: 0.875rem;
-  color: ${colors.text};
-  font-weight: 700;
-
-  @media (min-width: 480px) {
-    font-size: 1rem;
-  }
-
-  @media (min-width: 640px) {
-    font-size: 1.125rem;
-  }
-`;
-
-const HeaderRight = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
 `;
 
 const ActionButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
@@ -177,7 +75,7 @@ const ActionButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: '
 `;
 
 const Main = styled.main`
-  max-width: 64rem;
+  max-width: 72rem;
   margin: 0 auto;
   width: 100%;
   flex: 1;
@@ -546,36 +444,17 @@ export default function FaviconGeneratorPage() {
 
   return (
     <PageContainer>
-      <Header>
-        <HeaderContent>
-          <HeaderLeft>
-            <BackButton onClick={() => router.push('/')}>
-              <svg
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              <span>{tc('back')}</span>
-            </BackButton>
-            <Divider />
-            <Title>{t('title')}</Title>
-          </HeaderLeft>
-          <HeaderRight>
-            {favicons.length > 0 && (
-              <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
-                {tc('reset')}
-              </ActionButton>
-            )}
-          </HeaderRight>
-        </HeaderContent>
-      </Header>
+      <PageHeader
+        title={t('title')}
+        onBack={() => router.push('/')}
+        actions={
+          favicons.length > 0 ? (
+            <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
+              {tc('reset')}
+            </ActionButton>
+          ) : null
+        }
+      />
 
       <Main>
         {!imageInfo ? (
