@@ -6,7 +6,6 @@ import styled, { keyframes } from 'styled-components';
 import { useTranslations } from 'next-intl';
 import DropZone from '@/components/DropZone';
 import PageHeader from '@/components/PageHeader';
-import TransformToolbar from '@/components/crop/TransformToolbar';
 import AspectRatioPicker, { type AspectPreset } from '@/components/crop/AspectRatioPicker';
 import CropDimensions from '@/components/crop/CropDimensions';
 import CropCanvas from '@/components/crop/CropCanvas';
@@ -19,7 +18,7 @@ import {
   STORAGE_KEYS,
 } from '@/lib/storage';
 import { getFormatFromMimeType } from '@/lib/utils';
-import type { CropRect, ImageFormat, Transform } from '@/lib/types';
+import type { CropRect, ImageFormat } from '@/lib/types';
 
 const colors = {
   bg: '#F8FAFC',
@@ -201,7 +200,6 @@ export default function CropPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [meta, setMeta] = useState<CropMetadata | null>(null);
 
-  const [transform, setTransform] = useState<Transform>({ rotate: 0, flipH: false, flipV: false });
   const [crop, setCrop] = useState<CropRect>({ x: 0, y: 0, width: 0, height: 0 });
   const [aspectId, setAspectId] = useState<string>('free');
   const [aspect, setAspect] = useState<number | null>(null);
@@ -212,13 +210,9 @@ export default function CropPage() {
 
   const initialDimsRef = useRef<{ w: number; h: number } | null>(null);
 
-  const workingDims = (() => {
-    if (!meta) return { w: 0, h: 0 };
-    const rotated = transform.rotate === 90 || transform.rotate === 270;
-    return rotated
-      ? { w: meta.originalHeight, h: meta.originalWidth }
-      : { w: meta.originalWidth, h: meta.originalHeight };
-  })();
+  const workingDims = meta
+    ? { w: meta.originalWidth, h: meta.originalHeight }
+    : { w: 0, h: 0 };
 
   useEffect(() => {
     let cancelled = false;
@@ -278,7 +272,6 @@ export default function CropPage() {
       setMeta(m);
       setCrop({ x: 0, y: 0, width: dims.w, height: dims.h });
       initialDimsRef.current = { w: dims.w, h: dims.h };
-      setTransform({ rotate: 0, flipH: false, flipV: false });
       setAspectId('free');
       setAspect(null);
       if (file.type) setFormat(getFormatFromMimeType(file.type));
@@ -287,17 +280,6 @@ export default function CropPage() {
       setError(t('errorLoad'));
     }
   }, [t]);
-
-  const handleTransformChange = (next: Transform) => {
-    const rotationChanged = next.rotate !== transform.rotate;
-    setTransform(next);
-    if (rotationChanged && meta) {
-      const rotated = next.rotate === 90 || next.rotate === 270;
-      const w = rotated ? meta.originalHeight : meta.originalWidth;
-      const h = rotated ? meta.originalWidth : meta.originalHeight;
-      setCrop({ x: 0, y: 0, width: w, height: h });
-    }
-  };
 
   const handleAspect = (preset: AspectPreset) => {
     setAspectId(preset.id);
@@ -321,7 +303,6 @@ export default function CropPage() {
   };
 
   const handleReset = () => {
-    setTransform({ rotate: 0, flipH: false, flipV: false });
     if (initialDimsRef.current) {
       setCrop({ x: 0, y: 0, width: initialDimsRef.current.w, height: initialDimsRef.current.h });
     }
@@ -340,7 +321,12 @@ export default function CropPage() {
     setError(null);
     setProcessing(true);
     try {
-      const result = await cropAndTransform(imageUrl, { crop, transform, format, quality });
+      const result = await cropAndTransform(imageUrl, {
+        crop,
+        transform: { rotate: 0, flipH: false, flipV: false },
+        format,
+        quality,
+      });
       downloadImage(result.blob, meta.name, format);
       URL.revokeObjectURL(result.url);
     } catch (err) {
@@ -394,10 +380,6 @@ export default function CropPage() {
         />
 
         <SidePanel>
-          <Card>
-            <TransformToolbar value={transform} onChange={handleTransformChange} />
-          </Card>
-
           <Card>
             <AspectRatioPicker value={aspectId} onChange={handleAspect} originalRatio={originalRatio} />
           </Card>
