@@ -15,8 +15,6 @@
     "modeBatch": "หลายภาพ",
     "loadingImage": "กำลังโหลดรูปภาพ...",
     "loadingImages": "กำลังโหลดรูปภาพ...",
-    "featureResize": "ปรับขนาด",
-    "featureResizeDesc": "เปลี่ยนขนาดภาพ",
     "featureConvert": "แปลง",
     "featureConvertDesc": "JPG, PNG, WebP",
     "featureBatch": "หลายภาพ",
@@ -117,7 +115,9 @@
     "reset": "รีเซ็ต",
     "download": "ดาวน์โหลด",
     "processing": "กำลังประมวลผล...",
-    "invalidCrop": "พื้นที่ครอปไม่ถูกต้อง"
+    "invalidCrop": "พื้นที่ครอปไม่ถูกต้อง",
+    "errorLoad": "โหลดรูปไม่สำเร็จ กรุณาลองไฟล์อื่น",
+    "errorProcess": "ประมวลผลรูปไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
   },
   "dropzone": {
     "dropFile": "วางไฟล์ที่นี่",

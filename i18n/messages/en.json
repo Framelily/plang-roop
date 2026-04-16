@@ -15,8 +15,6 @@
     "modeBatch": "BATCH",
     "loadingImage": "Loading image...",
     "loadingImages": "Loading images...",
-    "featureResize": "RESIZE",
-    "featureResizeDesc": "Change dimensions",
     "featureConvert": "CONVERT",
     "featureConvertDesc": "JPG, PNG, WebP",
     "featureBatch": "BATCH",
@@ -117,7 +115,9 @@
     "reset": "Reset",
     "download": "Download",
     "processing": "Processing...",
-    "invalidCrop": "Invalid crop area"
+    "invalidCrop": "Invalid crop area",
+    "errorLoad": "Failed to load image. Please try another file.",
+    "errorProcess": "Failed to process image. Please try again."
   },
   "dropzone": {
     "dropFile": "DROP FILE HERE",

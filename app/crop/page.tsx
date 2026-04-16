@@ -345,7 +345,7 @@ export default function CropPage() {
       if (file.type) setFormat(getFormatFromMimeType(file.type));
     } catch (err) {
       console.error(err);
-      setError(t('invalidCrop'));
+      setError(t('errorLoad'));
     }
   }, [t]);
 
@@ -406,7 +406,8 @@ export default function CropPage() {
       URL.revokeObjectURL(result.url);
     } catch (err) {
       console.error(err);
-      setError(t('invalidCrop'));
+      const msg = err instanceof Error && err.message === 'invalidCrop' ? 'invalidCrop' : 'errorProcess';
+      setError(t(msg));
     } finally {
       setProcessing(false);
     }
@@ -441,14 +442,14 @@ export default function CropPage() {
   }
 
   const invalid = crop.width <= 0 || crop.height <= 0;
-  const originalRatio = meta.originalWidth / meta.originalHeight;
+  const originalRatio = workingDims.w / workingDims.h;
 
   return (
     <PageContainer>
       <HeaderWrap>
         <Header>
           <HeaderLeft>
-            <BackBtn type="button" onClick={handleBack}>←</BackBtn>
+            <BackBtn type="button" onClick={handleBack} aria-label={t('backToUpload')}>←</BackBtn>
             <Title>{t('backTitle')}</Title>
             <FileName title={meta.name}>{meta.name}</FileName>
           </HeaderLeft>
