@@ -12,6 +12,15 @@ import { formatFileSize, getFormatFromMimeType } from '@/lib/utils';
 import { getImageData, removeImageData, STORAGE_KEYS } from '@/lib/storage';
 import type { ImageFormat, ProcessedImage } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
+import {
+  PageMain,
+  PreviewArea,
+  SidePanel,
+  SectionCard,
+  PageActions,
+  ActionButton,
+  Spinner,
+} from '@/components/layout';
 import Input from '@/components/ui/Input';
 import Checkbox from '@/components/ui/Checkbox';
 import RadioGroup from '@/components/ui/RadioGroup';
@@ -45,97 +54,6 @@ const PageContainer = styled.div`
   background-color: ${colors.bg};
   font-family: var(--font-body);
   color: ${colors.text};
-`;
-
-const ActionButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
-  font-family: var(--font-heading);
-  font-size: ${props => props.$size === 'sm' ? '0.813rem' : '0.875rem'};
-  padding: ${props => props.$size === 'sm' ? '8px 16px' : '10px 20px'};
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 600;
-
-  ${props => props.$variant === 'outline' ? `
-    background-color: transparent;
-    border: 1px solid ${colors.border};
-    color: ${colors.textMuted};
-
-    &:hover:not(:disabled) {
-      border-color: ${colors.primary};
-      color: ${colors.primary};
-      background: ${colors.primaryLight};
-    }
-  ` : `
-    background-color: ${colors.primary};
-    border: 1px solid ${colors.primary};
-    color: white;
-
-    &:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-  `}
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-`;
-
-const Main = styled.main`
-  max-width: 72rem;
-  margin: 0 auto;
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 24px 16px;
-
-  @media (min-width: 1024px) {
-    flex-direction: row;
-  }
-`;
-
-const ControlsSection = styled.div`
-  width: 100%;
-
-  @media (min-width: 1024px) {
-    width: 320px;
-    flex-shrink: 0;
-    order: 2;
-  }
-`;
-
-const Card = styled.div`
-  background-color: ${colors.bgCard};
-  border: 1px solid ${colors.border};
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-  @media (min-width: 640px) {
-    padding: 20px;
-  }
-`;
-
-const SectionTitle = styled.h3`
-  font-family: var(--font-heading);
-  font-size: 0.813rem;
-  color: ${colors.text};
-  font-weight: 700;
-  margin-bottom: 16px;
-`;
-
-const SectionDivider = styled.div`
-  height: 1px;
-  background: ${colors.border};
-  margin: 20px 0;
 `;
 
 const InputGroup = styled.div`
@@ -213,15 +131,17 @@ const SavedValue = styled.dd<{ $positive: boolean }>`
   color: ${props => props.$positive ? colors.success : colors.error};
 `;
 
-const PreviewSection = styled.div`
-  flex: 1;
+const PreviewCard = styled.section`
+  background-color: ${colors.bgCard};
+  border: 1px solid ${colors.border};
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
-  @media (min-width: 1024px) {
-    order: 1;
+  @media (min-width: 640px) {
+    padding: 20px;
   }
 `;
-
-const PreviewCard = styled(Card)``;
 
 const PreviewHeader = styled.div`
   display: flex;
@@ -594,168 +514,10 @@ export default function EditorPage() {
       <PageHeader
         title={t('title')}
         onBack={handleBack}
-        actions={
-          <>
-            <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
-              {tc('reset')}
-            </ActionButton>
-            <ActionButton $size="sm" onClick={handleDownload} disabled={!processedImage || isPreviewProcessing}>
-              {isPreviewProcessing ? '...' : tc('download')}
-            </ActionButton>
-          </>
-        }
       />
 
-
-      <Main>
-        {/* Controls Section */}
-        <ControlsSection>
-          <Card>
-            {/* Resize Section */}
-            <div>
-              <SectionTitle>{t('resize')}</SectionTitle>
-              <InputGroup>
-                <Input
-                  id="width"
-                  type="number"
-                  label={t('width')}
-                  suffix="px"
-                  value={width || ''}
-                  onChange={(e) => handleWidthChange(Number(e.target.value) || 0)}
-                  min={1}
-                  max={10000}
-                />
-                <Input
-                  id="height"
-                  type="number"
-                  label={t('height')}
-                  suffix="px"
-                  value={height || ''}
-                  onChange={(e) => handleHeightChange(Number(e.target.value) || 0)}
-                  min={1}
-                  max={10000}
-                />
-              </InputGroup>
-              <div style={{ marginTop: '12px' }}>
-                <Checkbox
-                  id="keepRatio"
-                  label={t('keepAspectRatio')}
-                  checked={keepAspectRatio}
-                  onChange={(e) => setKeepAspectRatio(e.target.checked)}
-                />
-              </div>
-            </div>
-
-            <SectionDivider />
-
-            {/* Format Section */}
-            <div>
-              <SectionTitle>{t('outputFormat')}</SectionTitle>
-              <RadioGroup
-                name="format"
-                value={format}
-                onChange={(value) => setFormat(value as ImageFormat)}
-                options={[
-                  { value: 'jpeg', label: 'JPG' },
-                  { value: 'png', label: 'PNG' },
-                  { value: 'webp', label: 'WebP' },
-                ]}
-              />
-            </div>
-
-            <SectionDivider />
-
-            {/* Quality Section */}
-            <div>
-              <SectionTitle>{t('quality')}</SectionTitle>
-              <Slider
-                id="quality"
-                min={10}
-                max={100}
-                step={5}
-                value={quality}
-                onChange={(e) => setQuality(Number(e.target.value))}
-              />
-              <HelpText>
-                {t('qualityHelp')}
-              </HelpText>
-            </div>
-
-            {/* EXIF Section - only show for JPEG */}
-            {imageInfo && mayContainExif(imageInfo.type) && (
-              <>
-                <SectionDivider />
-                <div>
-                  <SectionTitle>{t('privacy')}</SectionTitle>
-                  <Checkbox
-                    id="stripExif"
-                    label={t('stripExif')}
-                    checked={stripExif}
-                    onChange={(e) => setStripExif(e.target.checked)}
-                  />
-                  <HelpText>
-                    {t('stripExifHelp')}
-                  </HelpText>
-                </div>
-              </>
-            )}
-
-            <SectionDivider />
-
-            {/* Info Section */}
-            <InfoGrid>
-              <InfoBlock>
-                <InfoTitle>{t('original')}</InfoTitle>
-                <InfoList>
-                  <InfoRow>
-                    <InfoLabel>{t('dim')}</InfoLabel>
-                    <InfoValue>
-                      {imageInfo.originalWidth}x{imageInfo.originalHeight}
-                    </InfoValue>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>{t('size')}</InfoLabel>
-                    <InfoValue>
-                      {formatFileSize(imageInfo.size)}
-                    </InfoValue>
-                  </InfoRow>
-                </InfoList>
-              </InfoBlock>
-
-              {/* Processed Info */}
-              {processedImage && (
-                <InfoBlock>
-                  <InfoTitle>{t('processed')}</InfoTitle>
-                  <InfoList>
-                    <InfoRow>
-                      <InfoLabel>{t('dim')}</InfoLabel>
-                      <InfoValue>
-                        {processedImage.width}x{processedImage.height}
-                      </InfoValue>
-                    </InfoRow>
-                    <InfoRow>
-                      <InfoLabel>{t('size')}</InfoLabel>
-                      <InfoValue>
-                        {formatFileSize(processedImage.size)}
-                      </InfoValue>
-                    </InfoRow>
-                    <InfoRow>
-                      <InfoLabel>{t('saved')}</InfoLabel>
-                      <SavedValue $positive={processedImage.size < imageInfo.size}>
-                        {processedImage.size < imageInfo.size
-                          ? `-${Math.round(((imageInfo.size - processedImage.size) / imageInfo.size) * 100)}%`
-                          : `+${Math.round(((processedImage.size - imageInfo.size) / imageInfo.size) * 100)}%`}
-                      </SavedValue>
-                    </InfoRow>
-                  </InfoList>
-                </InfoBlock>
-              )}
-            </InfoGrid>
-          </Card>
-        </ControlsSection>
-
-        {/* Preview Section */}
-        <PreviewSection>
+      <PageMain>
+        <PreviewArea>
           <PreviewCard>
             <PreviewHeader>
               <PreviewTitle>
@@ -782,8 +544,149 @@ export default function EditorPage() {
               {imageInfo.name}
             </FileName>
           </PreviewCard>
-        </PreviewSection>
-      </Main>
+
+          <InfoGrid>
+            <InfoBlock>
+              <InfoTitle>{t('original')}</InfoTitle>
+              <InfoList>
+                <InfoRow>
+                  <InfoLabel>{t('dim')}</InfoLabel>
+                  <InfoValue>
+                    {imageInfo.originalWidth}x{imageInfo.originalHeight}
+                  </InfoValue>
+                </InfoRow>
+                <InfoRow>
+                  <InfoLabel>{t('size')}</InfoLabel>
+                  <InfoValue>
+                    {formatFileSize(imageInfo.size)}
+                  </InfoValue>
+                </InfoRow>
+              </InfoList>
+            </InfoBlock>
+
+            {/* Processed Info */}
+            {processedImage && (
+              <InfoBlock>
+                <InfoTitle>{t('processed')}</InfoTitle>
+                <InfoList>
+                  <InfoRow>
+                    <InfoLabel>{t('dim')}</InfoLabel>
+                    <InfoValue>
+                      {processedImage.width}x{processedImage.height}
+                    </InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>{t('size')}</InfoLabel>
+                    <InfoValue>
+                      {formatFileSize(processedImage.size)}
+                    </InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>{t('saved')}</InfoLabel>
+                    <SavedValue $positive={processedImage.size < imageInfo.size}>
+                      {processedImage.size < imageInfo.size
+                        ? `-${Math.round(((imageInfo.size - processedImage.size) / imageInfo.size) * 100)}%`
+                        : `+${Math.round(((processedImage.size - imageInfo.size) / imageInfo.size) * 100)}%`}
+                    </SavedValue>
+                  </InfoRow>
+                </InfoList>
+              </InfoBlock>
+            )}
+          </InfoGrid>
+        </PreviewArea>
+
+        <SidePanel>
+          <SectionCard title={t('resize')}>
+            <InputGroup>
+              <Input
+                id="width"
+                type="number"
+                label={t('width')}
+                suffix="px"
+                value={width || ''}
+                onChange={(e) => handleWidthChange(Number(e.target.value) || 0)}
+                min={1}
+                max={10000}
+              />
+              <Input
+                id="height"
+                type="number"
+                label={t('height')}
+                suffix="px"
+                value={height || ''}
+                onChange={(e) => handleHeightChange(Number(e.target.value) || 0)}
+                min={1}
+                max={10000}
+              />
+            </InputGroup>
+            <div style={{ marginTop: '12px' }}>
+              <Checkbox
+                id="keepRatio"
+                label={t('keepAspectRatio')}
+                checked={keepAspectRatio}
+                onChange={(e) => setKeepAspectRatio(e.target.checked)}
+              />
+            </div>
+          </SectionCard>
+
+          <SectionCard title={t('outputFormat')}>
+            <RadioGroup
+              name="format"
+              value={format}
+              onChange={(value) => setFormat(value as ImageFormat)}
+              options={[
+                { value: 'jpeg', label: 'JPG' },
+                { value: 'png', label: 'PNG' },
+                { value: 'webp', label: 'WebP' },
+              ]}
+            />
+          </SectionCard>
+
+          <SectionCard title={t('quality')}>
+            <Slider
+              id="quality"
+              min={10}
+              max={100}
+              step={5}
+              value={quality}
+              onChange={(e) => setQuality(Number(e.target.value))}
+            />
+            <HelpText>{t('qualityHelp')}</HelpText>
+          </SectionCard>
+
+          {imageInfo && mayContainExif(imageInfo.type) && (
+            <SectionCard title={t('privacy')}>
+              <Checkbox
+                id="stripExif"
+                label={t('stripExif')}
+                checked={stripExif}
+                onChange={(e) => setStripExif(e.target.checked)}
+              />
+              <HelpText>{t('stripExifHelp')}</HelpText>
+            </SectionCard>
+          )}
+
+          <PageActions>
+            <ActionButton $variant="outline" onClick={handleReset}>
+              {tc('reset')}
+            </ActionButton>
+            <ActionButton
+              $variant="primary"
+              onClick={handleDownload}
+              disabled={!processedImage || isPreviewProcessing}
+            >
+              {isPreviewProcessing ? (
+                <>
+                  <Spinner />
+                  {tc('processing')}
+                </>
+              ) : (
+                tc('download')
+              )}
+            </ActionButton>
+          </PageActions>
+        </SidePanel>
+      </PageMain>
 
       {downloadComplete && (
         <SuccessOverlay>
