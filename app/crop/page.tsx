@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import styled, { keyframes } from 'styled-components';
 import { useTranslations } from 'next-intl';
 import DropZone from '@/components/DropZone';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
+import PageHeader from '@/components/PageHeader';
 import TransformToolbar from '@/components/crop/TransformToolbar';
 import AspectRatioPicker, { type AspectPreset } from '@/components/crop/AspectRatioPicker';
 import CropDimensions from '@/components/crop/CropDimensions';
@@ -45,65 +45,6 @@ const PageContainer = styled.div`
   background: ${colors.bg};
   font-family: var(--font-body);
   color: ${colors.text};
-`;
-
-const HeaderWrap = styled.div`
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  padding: 12px 12px 0;
-  @media (min-width: 640px) {
-    padding: 16px 16px 0;
-  }
-`;
-
-const Header = styled.header`
-  background: ${colors.bgCard};
-  border: 1px solid ${colors.border};
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-`;
-
-const HeaderLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-`;
-
-const BackBtn = styled.button`
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 10px;
-  background: ${colors.primaryLight};
-  color: ${colors.primary};
-  border: none;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
-`;
-
-const Title = styled.h1`
-  font-family: var(--font-heading);
-  font-size: 1rem;
-  margin: 0;
-  color: ${colors.text};
-`;
-
-const FileName = styled.span`
-  font-size: 0.8rem;
-  color: ${colors.textMuted};
-  max-width: 240px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 `;
 
 const Main = styled.main`
@@ -422,15 +363,7 @@ export default function CropPage() {
   if (!imageUrl || !meta) {
     return (
       <PageContainer>
-        <HeaderWrap>
-          <Header>
-            <HeaderLeft>
-              <BackBtn type="button" onClick={() => router.push('/')}>← {t('backToUpload')}</BackBtn>
-              <Title>{t('backTitle')}</Title>
-            </HeaderLeft>
-            <LanguageSwitcher />
-          </Header>
-        </HeaderWrap>
+        <PageHeader title={t('backTitle')} onBack={() => router.push('/')} />
         <EmptyState>
           <DropZone onFileSelect={handleDrop} />
           {error && <ErrorBox>{error}</ErrorBox>}
@@ -444,16 +377,11 @@ export default function CropPage() {
 
   return (
     <PageContainer>
-      <HeaderWrap>
-        <Header>
-          <HeaderLeft>
-            <BackBtn type="button" onClick={handleBack} aria-label={t('backToUpload')}>←</BackBtn>
-            <Title>{t('backTitle')}</Title>
-            <FileName title={meta.name}>{meta.name}</FileName>
-          </HeaderLeft>
-          <LanguageSwitcher />
-        </Header>
-      </HeaderWrap>
+      <PageHeader
+        title={t('backTitle')}
+        subtitle={meta.name}
+        onBack={handleBack}
+      />
 
       <Main>
         <CropCanvas
