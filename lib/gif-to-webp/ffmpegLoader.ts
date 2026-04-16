@@ -12,6 +12,7 @@ export async function getFFmpeg(): Promise<FFmpeg> {
     await ffmpeg.load({
       coreURL: '/ffmpeg/ffmpeg-core.js',
       wasmURL: '/ffmpeg/ffmpeg-core.wasm',
+      classWorkerURL: '/ffmpeg/worker.js',
     });
     instance = ffmpeg;
     return ffmpeg;
