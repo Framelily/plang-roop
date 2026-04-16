@@ -177,13 +177,13 @@ const ErrorBox = styled.div`
 `;
 
 const EmptyState = styled.div`
-  max-width: 36rem;
-  margin: 3rem auto;
+  max-width: 72rem;
+  width: 100%;
+  margin: 2rem auto;
   padding: 0 16px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  text-align: center;
 `;
 
 interface CropMetadata {
