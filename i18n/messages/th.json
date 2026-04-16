@@ -19,6 +19,8 @@
     "featureResizeDesc": "เปลี่ยนขนาดภาพ",
     "featureConvert": "แปลง",
     "featureConvertDesc": "JPG, PNG, WebP",
+    "featureGifToWebp": "GIF → WebP",
+    "featureGifToWebpDesc": "WebP อนิเมชัน",
     "featureBatch": "หลายภาพ",
     "featureBatchDesc": "ประมวลผลหลายไฟล์",
     "featureFavicon": "FAVICON",

@@ -19,6 +19,8 @@
     "featureResizeDesc": "Change dimensions",
     "featureConvert": "CONVERT",
     "featureConvertDesc": "JPG, PNG, WebP",
+    "featureGifToWebp": "GIF → WebP",
+    "featureGifToWebpDesc": "Animated WebP",
     "featureBatch": "BATCH",
     "featureBatchDesc": "Process multiple",
     "featureFavicon": "FAVICON",
