@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ffmpeg-core copied by scripts/copy-ffmpeg.mjs (postinstall)
+/public/ffmpeg/
