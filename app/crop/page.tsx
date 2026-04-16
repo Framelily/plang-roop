@@ -2,13 +2,24 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import { useTranslations } from 'next-intl';
 import DropZone from '@/components/DropZone';
 import PageHeader from '@/components/PageHeader';
 import AspectRatioPicker, { type AspectPreset } from '@/components/crop/AspectRatioPicker';
 import CropDimensions from '@/components/crop/CropDimensions';
 import CropCanvas from '@/components/crop/CropCanvas';
+import {
+  PageMain,
+  PreviewArea,
+  SidePanel,
+  SectionCard,
+  PageActions,
+  ActionButton,
+  Pills,
+  Pill,
+  Spinner,
+} from '@/components/layout';
 import { cropAndTransform } from '@/lib/image/crop';
 import { downloadImage } from '@/lib/image/download';
 import {
@@ -32,11 +43,6 @@ const colors = {
   border: '#E2E8F0',
 };
 
-const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`;
-
 const PageContainer = styled.div`
   min-height: 100vh;
   display: flex;
@@ -44,66 +50,6 @@ const PageContainer = styled.div`
   background: ${colors.bg};
   font-family: var(--font-body);
   color: ${colors.text};
-`;
-
-const Main = styled.main`
-  flex: 1;
-  max-width: 72rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: 16px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-
-  @media (min-width: 1024px) {
-    grid-template-columns: 1fr 340px;
-    align-items: start;
-  }
-`;
-
-const SidePanel = styled.aside`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const Card = styled.section`
-  background: ${colors.bgCard};
-  border: 1px solid ${colors.border};
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-`;
-
-const SectionLabel = styled.div`
-  font-family: var(--font-heading);
-  font-size: 0.75rem;
-  letter-spacing: 0.5px;
-  color: ${colors.textMuted};
-  margin-bottom: 0.75rem;
-`;
-
-const FormatRow = styled.div`
-  display: flex;
-  gap: 0.5rem;
-`;
-
-const FormatBtn = styled.button<{ $active: boolean }>`
-  flex: 1;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid ${({ $active }) => ($active ? colors.primary : colors.border)};
-  background: ${({ $active }) => ($active ? colors.primary : colors.bgCard)};
-  color: ${({ $active }) => ($active ? '#fff' : colors.text)};
-  font-family: var(--font-body);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  cursor: pointer;
-`;
-
-const Slider = styled.input`
-  width: 100%;
 `;
 
 const QualityRow = styled.div`
@@ -118,53 +64,6 @@ const QualityValue = styled.span`
   color: ${colors.textMuted};
   min-width: 36px;
   text-align: right;
-`;
-
-const Actions = styled.div`
-  display: flex;
-  gap: 0.5rem;
-`;
-
-const ResetBtn = styled.button`
-  flex: 1;
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid ${colors.border};
-  background: ${colors.bgCard};
-  color: ${colors.text};
-  font-family: var(--font-body);
-  font-weight: 700;
-  cursor: pointer;
-`;
-
-const DownloadBtn = styled.button`
-  flex: 2;
-  height: 44px;
-  border-radius: 12px;
-  border: none;
-  background: ${colors.primary};
-  color: #ffffff;
-  font-family: var(--font-body);
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const Spinner = styled.div`
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: ${spin} 0.8s linear infinite;
 `;
 
 const ErrorBox = styled.div`
@@ -195,6 +94,7 @@ interface CropMetadata {
 export default function CropPage() {
   const router = useRouter();
   const t = useTranslations('crop');
+  const tc = useTranslations('common');
 
   const [loaded, setLoaded] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -369,50 +269,45 @@ export default function CropPage() {
         onBack={handleBack}
       />
 
-      <Main>
-        <CropCanvas
-          imageUrl={imageUrl}
-          imageWidth={workingDims.w}
-          imageHeight={workingDims.h}
-          crop={crop}
-          aspect={aspect}
-          onCropChange={(r) => setCrop(r)}
-        />
+      <PageMain>
+        <PreviewArea>
+          <CropCanvas
+            imageUrl={imageUrl}
+            imageWidth={workingDims.w}
+            imageHeight={workingDims.h}
+            crop={crop}
+            aspect={aspect}
+            onCropChange={(r) => setCrop(r)}
+          />
+        </PreviewArea>
 
         <SidePanel>
-          <Card>
+          <SectionCard>
             <AspectRatioPicker value={aspectId} onChange={handleAspect} originalRatio={originalRatio} />
-          </Card>
+          </SectionCard>
 
-          <Card>
+          <SectionCard>
             <CropDimensions
               crop={crop}
               maxWidth={workingDims.w}
               maxHeight={workingDims.h}
               onChange={(r) => setCrop(r)}
             />
-          </Card>
+          </SectionCard>
 
-          <Card>
-            <SectionLabel>{t('format')}</SectionLabel>
-            <FormatRow>
+          <SectionCard title={t('format')}>
+            <Pills>
               {(['jpeg', 'png', 'webp'] as const).map((f) => (
-                <FormatBtn
-                  key={f}
-                  type="button"
-                  $active={format === f}
-                  onClick={() => setFormat(f)}
-                >
+                <Pill key={f} type="button" $active={format === f} onClick={() => setFormat(f)}>
                   {f === 'jpeg' ? 'JPG' : f.toUpperCase()}
-                </FormatBtn>
+                </Pill>
               ))}
-            </FormatRow>
-          </Card>
+            </Pills>
+          </SectionCard>
 
-          <Card>
-            <SectionLabel>{t('quality')}</SectionLabel>
+          <SectionCard title={t('quality')}>
             <QualityRow>
-              <Slider
+              <input
                 type="range"
                 min={0.1}
                 max={1}
@@ -420,30 +315,35 @@ export default function CropPage() {
                 value={quality}
                 onChange={(e) => setQuality(Number(e.target.value))}
                 disabled={format === 'png'}
+                style={{ width: '100%' }}
               />
               <QualityValue>{Math.round(quality * 100)}%</QualityValue>
             </QualityRow>
-          </Card>
+          </SectionCard>
 
           {error && <ErrorBox>{error}</ErrorBox>}
 
-          <Actions>
-            <ResetBtn type="button" onClick={handleReset}>
-              {t('reset')}
-            </ResetBtn>
-            <DownloadBtn type="button" onClick={handleDownload} disabled={processing || invalid}>
+          <PageActions>
+            <ActionButton $variant="outline" onClick={handleReset}>
+              {tc('reset')}
+            </ActionButton>
+            <ActionButton
+              $variant="primary"
+              onClick={handleDownload}
+              disabled={processing || invalid}
+            >
               {processing ? (
                 <>
                   <Spinner />
-                  {t('processing')}
+                  {tc('processing')}
                 </>
               ) : (
-                t('download')
+                tc('download')
               )}
-            </DownloadBtn>
-          </Actions>
+            </ActionButton>
+          </PageActions>
         </SidePanel>
-      </Main>
+      </PageMain>
     </PageContainer>
   );
 }
