@@ -11,6 +11,7 @@ import { mayContainExif } from '@/lib/image/exif';
 import { formatFileSize, getFormatFromMimeType } from '@/lib/utils';
 import { getImageData, removeImageData, STORAGE_KEYS } from '@/lib/storage';
 import type { ImageFormat, ProcessedImage } from '@/lib/types';
+import PageHeader from '@/components/PageHeader';
 
 // Soft UI Evolution Palette
 const colors = {
@@ -40,89 +41,6 @@ const PageContainer = styled.div`
   background-color: ${colors.bg};
   font-family: var(--font-body);
   color: ${colors.text};
-`;
-
-const HeaderWrapper = styled.div`
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  padding: 12px 12px 0;
-
-  @media (min-width: 640px) {
-    padding: 16px 16px 0;
-  }
-`;
-
-const Header = styled.header`
-  background-color: ${colors.bgCard};
-  border: 1px solid ${colors.border};
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  max-width: 72rem;
-  margin: 0 auto;
-`;
-
-const HeaderContent = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
-`;
-
-const HeaderLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
-
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: ${colors.textMuted};
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 0.938rem;
-  transition: all 0.2s;
-  padding: 8px 12px;
-  border-radius: 8px;
-
-  &:hover {
-    color: ${colors.primary};
-    background: ${colors.primaryLight};
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`;
-
-const Divider = styled.div`
-  width: 1px;
-  height: 24px;
-  background-color: ${colors.border};
-
-  @media (max-width: 640px) {
-    display: none;
-  }
-`;
-
-const Title = styled.h1`
-  font-family: var(--font-heading);
-  font-size: 1.125rem;
-  color: ${colors.text};
-  font-weight: 700;
-`;
-
-const HeaderRight = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
 `;
 
 const ActionButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
@@ -973,39 +891,21 @@ export default function EditorPage() {
 
   return (
     <PageContainer>
-      <HeaderWrapper>
-        <Header>
-          <HeaderContent>
-            <HeaderLeft>
-              <BackButton onClick={handleBack}>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                <span>{tc('back')}</span>
-              </BackButton>
-              <Divider />
-              <Title>{t('title')}</Title>
-            </HeaderLeft>
-            <HeaderRight>
-              <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
-                {tc('reset')}
-              </ActionButton>
-              <ActionButton $size="sm" onClick={handleDownload} disabled={!processedImage || isPreviewProcessing}>
-                {isPreviewProcessing ? '...' : tc('download')}
-              </ActionButton>
-            </HeaderRight>
-          </HeaderContent>
-        </Header>
-      </HeaderWrapper>
+      <PageHeader
+        title={t('title')}
+        onBack={handleBack}
+        actions={
+          <>
+            <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
+              {tc('reset')}
+            </ActionButton>
+            <ActionButton $size="sm" onClick={handleDownload} disabled={!processedImage || isPreviewProcessing}>
+              {isPreviewProcessing ? '...' : tc('download')}
+            </ActionButton>
+          </>
+        }
+      />
+
 
       <Main>
         {/* Controls Section */}
