@@ -23,7 +23,7 @@ Add a dedicated image-cropping feature to PLANG-ROOP as a standalone route, alon
 
 ### New Files
 
-```
+```text
 app/crop/
   layout.tsx                 # matches editor/batch layout pattern
   page.tsx                   # main crop page (client component)
@@ -171,7 +171,7 @@ On mount: load from IndexedDB → set `imageFile` → init `crop` to full image.
 
 New `crop` namespace in `i18n/messages/en.json` and `th.json`:
 
-```
+```text
 crop.title, crop.back, crop.filename,
 crop.transform, crop.rotate90cw, crop.rotate90ccw, crop.rotate180, crop.flipH, crop.flipV,
 crop.aspectRatio, crop.free, crop.original,
