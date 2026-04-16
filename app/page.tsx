@@ -175,10 +175,6 @@ const FeaturesGrid = styled.div`
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   margin-top: 2rem;
-
-  @media (min-width: 640px) {
-    grid-template-columns: repeat(4, 1fr);
-  }
 `;
 
 const FeatureCard = styled.div<{ $clickable?: boolean }>`
@@ -434,28 +430,6 @@ export default function Home() {
                 </FeatureIcon>
                 <FeatureTitle>{t('featureCrop')}</FeatureTitle>
                 <FeatureDesc>{t('featureCropDesc')}</FeatureDesc>
-              </FeatureCard>
-              {/* CONVERT */}
-              <FeatureCard>
-                <FeatureIcon $bgColor="#EDE9FE" $color={colors.secondary}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 12a9 9 0 1 1-9-9" />
-                    <path d="M21 3v9h-9" />
-                  </svg>
-                </FeatureIcon>
-                <FeatureTitle>{t('featureConvert')}</FeatureTitle>
-                <FeatureDesc>{t('featureConvertDesc')}</FeatureDesc>
-              </FeatureCard>
-              {/* BATCH */}
-              <FeatureCard>
-                <FeatureIcon $bgColor="#DCFCE7" $color={colors.success}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="8" y="8" width="13" height="13" rx="1" />
-                    <rect x="3" y="3" width="13" height="13" rx="1" />
-                  </svg>
-                </FeatureIcon>
-                <FeatureTitle>{t('featureBatch')}</FeatureTitle>
-                <FeatureDesc>{t('featureBatchDesc')}</FeatureDesc>
               </FeatureCard>
               {/* FAVICON */}
               <FeatureCard
