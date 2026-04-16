@@ -43,13 +43,17 @@ export async function cropAndTransform(
     transform.flipV
   );
 
+  if (crop.width <= 0 || crop.height <= 0) {
+    throw new Error('invalidCrop');
+  }
+
   const sx = Math.max(0, Math.round(crop.x));
   const sy = Math.max(0, Math.round(crop.y));
-  const sw = Math.max(1, Math.round(crop.width));
-  const sh = Math.max(1, Math.round(crop.height));
+  const sw = Math.min(Math.round(crop.width), transformed.width - sx);
+  const sh = Math.min(Math.round(crop.height), transformed.height - sy);
 
-  if (sx + sw > transformed.width || sy + sh > transformed.height) {
-    throw new Error('Crop rect is out of bounds');
+  if (sw <= 0 || sh <= 0) {
+    throw new Error('invalidCrop');
   }
 
   const out = document.createElement('canvas');
