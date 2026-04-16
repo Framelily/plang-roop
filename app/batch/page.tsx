@@ -7,6 +7,15 @@ import { useTranslations } from 'next-intl';
 import ImageQueue from '@/components/ImageQueue';
 import BatchControls from '@/components/BatchControls';
 import ProgressBar from '@/components/ProgressBar';
+import {
+  PageMain,
+  PreviewArea,
+  SidePanel,
+  SectionCard,
+  PageActions,
+  ActionButton,
+  Spinner,
+} from '@/components/layout';
 import { processBatch } from '@/lib/image/batchProcessor';
 import { createZipFromProcessedImages } from '@/lib/image/zip';
 import { downloadImage } from '@/lib/image/download';
@@ -36,62 +45,27 @@ const PageContainer = styled.div`
   flex-direction: column;
 `;
 
-const ActionButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
+const InlineDownloadButton = styled.button`
   font-family: var(--font-heading);
-  font-size: ${props => props.$size === 'sm' ? '0.813rem' : '0.875rem'};
-  padding: ${props => props.$size === 'sm' ? '8px 16px' : '10px 20px'};
+  font-size: 0.813rem;
+  padding: 8px 16px;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
   font-weight: 600;
+  background: transparent;
+  border: 1px solid ${colors.border};
+  color: ${colors.textMuted};
 
-  ${props => props.$variant === 'outline' ? `
-    background: transparent;
-    border: 1px solid ${colors.border};
-    color: ${colors.textMuted};
-
-    &:hover:not(:disabled) {
-      border-color: ${colors.primary};
-      color: ${colors.primary};
-      background: ${colors.primaryLight};
-    }
-  ` : `
-    background: ${colors.primary};
-    border: 1px solid ${colors.primary};
-    color: white;
-
-    &:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-  `}
+  &:hover:not(:disabled) {
+    border-color: ${colors.primary};
+    color: ${colors.primary};
+    background: ${colors.primaryLight};
+  }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-`;
-
-const Main = styled.main`
-  max-width: 72rem;
-  margin: 0 auto;
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem 1rem;
-`;
-
-const SoftCard = styled.div`
-  background: ${colors.bgCard};
-  border: 1px solid ${colors.border};
-  border-radius: 16px;
-  padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-  @media (min-width: 640px) {
-    padding: 1.25rem;
   }
 `;
 
@@ -117,35 +91,6 @@ const EmptyText = styled.p`
   color: ${colors.textMuted};
   text-align: center;
   padding: 2rem 0;
-`;
-
-const ContentWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: 1.5rem;
-
-  @media (min-width: 1024px) {
-    flex-direction: row;
-  }
-`;
-
-const ControlsColumn = styled.div`
-  width: 100%;
-
-  @media (min-width: 1024px) {
-    order: 2;
-    width: 20rem;
-    flex-shrink: 0;
-  }
-`;
-
-const PreviewColumn = styled.div`
-  flex: 1;
-
-  @media (min-width: 1024px) {
-    order: 1;
-  }
 `;
 
 const PreviewHeader = styled.div`
@@ -288,18 +233,6 @@ const LoadingText = styled.div`
   color: ${colors.primary};
   font-weight: 600;
 `;
-
-const StatsCard = styled(SoftCard)`
-  margin-top: 1rem;
-`;
-
-const ProgressCard = styled(SoftCard)``;
-
-const ImageQueueWrapper = styled.div``;
-
-const BatchControlsWrapper = styled.div``;
-
-const ProgressBarWrapper = styled.div``;
 
 interface StoredImageData {
   name: string;
@@ -481,7 +414,6 @@ export default function BatchPage() {
 
   const selectedImage = images.find((img) => img.id === selectedId);
   const hasProcessedImages = images.some((img) => img.processedImage);
-  const allProcessed = images.every((img) => img.status === 'completed');
 
   // Calculate total stats
   const totalOriginalSize = images.reduce((sum, img) => sum + img.size, 0);
@@ -505,170 +437,163 @@ export default function BatchPage() {
         title={t('title')}
         subtitle={String(images.length)}
         onBack={handleBack}
-        actions={
-          <>
-            {hasProcessedImages && (
-              <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
-                {tc('reset')}
-              </ActionButton>
-            )}
-            <ActionButton
-              $size="sm"
-              onClick={handleProcessAndDownload}
-              disabled={isProcessing || images.length === 0}
-            >
-              {isProcessing ? tc('processing') : tc('download')}
-            </ActionButton>
-          </>
-        }
       />
 
-      <Main>
-        {/* Selected Images */}
-        <SoftCard>
-          <CardTitle>{t('selectedImages')}</CardTitle>
+      <PageMain>
+        <PreviewArea>
+          {/* Selected Images */}
+          <SectionCard>
+            <CardTitle>{t('selectedImages')}</CardTitle>
 
-          {images.length > 0 ? (
-            <ImageQueueWrapper>
+            {images.length > 0 ? (
               <ImageQueue
                 images={images}
                 onRemove={handleRemove}
                 selectedId={selectedId || undefined}
                 onSelect={setSelectedId}
               />
-            </ImageQueueWrapper>
-          ) : (
-            <EmptyText>{t('noImages')}</EmptyText>
-          )}
-        </SoftCard>
+            ) : (
+              <EmptyText>{t('noImages')}</EmptyText>
+            )}
+          </SectionCard>
 
-        {/* Progress */}
-        {isProcessing && (
-          <ProgressCard>
-            <ProgressBarWrapper>
+          {/* Progress */}
+          {isProcessing && (
+            <SectionCard>
               <ProgressBar
                 current={progress.current}
                 total={progress.total}
                 label={progress.file ? t('processingLabel', { file: progress.file }) : t('starting')}
               />
-            </ProgressBarWrapper>
-          </ProgressCard>
-        )}
-
-        <ContentWrapper>
-          {/* Controls */}
-          <ControlsColumn>
-            <SoftCard>
-              <BatchControlsWrapper>
-                <BatchControls
-                  options={options}
-                  onChange={handleOptionsChange}
-                  originalWidth={selectedImage?.originalWidth}
-                  originalHeight={selectedImage?.originalHeight}
-                />
-              </BatchControlsWrapper>
-            </SoftCard>
-
-            {/* Stats */}
-            {hasProcessedImages && (
-              <StatsCard>
-                <CardSubtitle>{t('batchStats')}</CardSubtitle>
-                <InfoList>
-                  <InfoRow>
-                    <InfoLabel>{t('totalOriginal')}</InfoLabel>
-                    <InfoValue>{formatFileSize(totalOriginalSize)}</InfoValue>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>{t('totalProcessed')}</InfoLabel>
-                    <InfoValue>{formatFileSize(totalProcessedSize)}</InfoValue>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>{t('saved')}</InfoLabel>
-                    <InfoValueGreen>
-                      {totalProcessedSize < totalOriginalSize
-                        ? `-${Math.round(((totalOriginalSize - totalProcessedSize) / totalOriginalSize) * 100)}%`
-                        : `+${Math.round(((totalProcessedSize - totalOriginalSize) / totalOriginalSize) * 100)}%`}
-                    </InfoValueGreen>
-                  </InfoRow>
-                </InfoList>
-              </StatsCard>
-            )}
-          </ControlsColumn>
+            </SectionCard>
+          )}
 
           {/* Preview */}
-          <PreviewColumn>
-            <SoftCard>
-              <PreviewHeader>
-                <CardTitle>{t('preview')}</CardTitle>
-                {selectedImage?.processedImage && (
-                  <ActionButton
-                    $variant="outline"
-                    $size="sm"
-                    onClick={handleDownloadSingle}
-                  >
-                    {tc('download')}
-                  </ActionButton>
-                )}
-              </PreviewHeader>
+          <SectionCard>
+            <PreviewHeader>
+              <CardTitle>{t('preview')}</CardTitle>
+              {selectedImage?.processedImage && (
+                <InlineDownloadButton type="button" onClick={handleDownloadSingle}>
+                  {tc('download')}
+                </InlineDownloadButton>
+              )}
+            </PreviewHeader>
 
-              {selectedImage ? (
-                <div>
-                  <PreviewContainer>
-                    <PreviewImage
-                      src={
-                        selectedImage.processedImage?.url ||
-                        selectedImage.previewUrl
-                      }
-                      alt={selectedImage.name}
-                    />
-                  </PreviewContainer>
+            {selectedImage ? (
+              <div>
+                <PreviewContainer>
+                  <PreviewImage
+                    src={
+                      selectedImage.processedImage?.url ||
+                      selectedImage.previewUrl
+                    }
+                    alt={selectedImage.name}
+                  />
+                </PreviewContainer>
 
-                  {/* Image Info */}
-                  <InfoGrid>
+                {/* Image Info */}
+                <InfoGrid>
+                  <InfoColumn>
+                    <InfoTitle>ORIGINAL</InfoTitle>
+                    <InfoList>
+                      <InfoRow>
+                        <InfoLabel>Size</InfoLabel>
+                        <InfoValue>{formatFileSize(selectedImage.size)}</InfoValue>
+                      </InfoRow>
+                      <InfoRow>
+                        <InfoLabel>Dim</InfoLabel>
+                        <InfoValue>
+                          {selectedImage.originalWidth}x{selectedImage.originalHeight}
+                        </InfoValue>
+                      </InfoRow>
+                    </InfoList>
+                  </InfoColumn>
+
+                  {selectedImage.processedImage && (
                     <InfoColumn>
-                      <InfoTitle>ORIGINAL</InfoTitle>
+                      <InfoTitle>PROCESSED</InfoTitle>
                       <InfoList>
                         <InfoRow>
                           <InfoLabel>Size</InfoLabel>
-                          <InfoValue>{formatFileSize(selectedImage.size)}</InfoValue>
+                          <InfoValue>
+                            {formatFileSize(selectedImage.processedImage.size)}
+                          </InfoValue>
                         </InfoRow>
                         <InfoRow>
                           <InfoLabel>Dim</InfoLabel>
                           <InfoValue>
-                            {selectedImage.originalWidth}x{selectedImage.originalHeight}
+                            {selectedImage.processedImage.width}x{selectedImage.processedImage.height}
                           </InfoValue>
                         </InfoRow>
                       </InfoList>
                     </InfoColumn>
+                  )}
+                </InfoGrid>
+              </div>
+            ) : (
+              <EmptyPreview>{t('selectToPreview')}</EmptyPreview>
+            )}
+          </SectionCard>
+        </PreviewArea>
 
-                    {selectedImage.processedImage && (
-                      <InfoColumn>
-                        <InfoTitle>PROCESSED</InfoTitle>
-                        <InfoList>
-                          <InfoRow>
-                            <InfoLabel>Size</InfoLabel>
-                            <InfoValue>
-                              {formatFileSize(selectedImage.processedImage.size)}
-                            </InfoValue>
-                          </InfoRow>
-                          <InfoRow>
-                            <InfoLabel>Dim</InfoLabel>
-                            <InfoValue>
-                              {selectedImage.processedImage.width}x{selectedImage.processedImage.height}
-                            </InfoValue>
-                          </InfoRow>
-                        </InfoList>
-                      </InfoColumn>
-                    )}
-                  </InfoGrid>
-                </div>
+        <SidePanel>
+          <SectionCard>
+            <BatchControls
+              options={options}
+              onChange={handleOptionsChange}
+              originalWidth={selectedImage?.originalWidth}
+              originalHeight={selectedImage?.originalHeight}
+            />
+          </SectionCard>
+
+          {/* Stats */}
+          {hasProcessedImages && (
+            <SectionCard>
+              <CardSubtitle>{t('batchStats')}</CardSubtitle>
+              <InfoList>
+                <InfoRow>
+                  <InfoLabel>{t('totalOriginal')}</InfoLabel>
+                  <InfoValue>{formatFileSize(totalOriginalSize)}</InfoValue>
+                </InfoRow>
+                <InfoRow>
+                  <InfoLabel>{t('totalProcessed')}</InfoLabel>
+                  <InfoValue>{formatFileSize(totalProcessedSize)}</InfoValue>
+                </InfoRow>
+                <InfoRow>
+                  <InfoLabel>{t('saved')}</InfoLabel>
+                  <InfoValueGreen>
+                    {totalProcessedSize < totalOriginalSize
+                      ? `-${Math.round(((totalOriginalSize - totalProcessedSize) / totalOriginalSize) * 100)}%`
+                      : `+${Math.round(((totalProcessedSize - totalOriginalSize) / totalOriginalSize) * 100)}%`}
+                  </InfoValueGreen>
+                </InfoRow>
+              </InfoList>
+            </SectionCard>
+          )}
+
+          <PageActions>
+            {hasProcessedImages && (
+              <ActionButton $variant="outline" onClick={handleReset}>
+                {tc('reset')}
+              </ActionButton>
+            )}
+            <ActionButton
+              $variant="primary"
+              onClick={handleProcessAndDownload}
+              disabled={isProcessing || images.length === 0}
+            >
+              {isProcessing ? (
+                <>
+                  <Spinner />
+                  {tc('processing')}
+                </>
               ) : (
-                <EmptyPreview>{t('selectToPreview')}</EmptyPreview>
+                tc('download')
               )}
-            </SoftCard>
-          </PreviewColumn>
-        </ContentWrapper>
-      </Main>
+            </ActionButton>
+          </PageActions>
+        </SidePanel>
+      </PageMain>
 
       {downloadComplete && (
         <SuccessOverlay>
