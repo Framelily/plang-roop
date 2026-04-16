@@ -72,7 +72,9 @@ export default function CropDimensions({ crop, maxWidth, maxHeight, onChange }: 
   const t = useTranslations('crop');
 
   const handle = (key: keyof CropRect) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = Number(e.target.value);
+    const rawStr = e.target.value;
+    if (rawStr === '') return;
+    const raw = Number(rawStr);
     if (Number.isNaN(raw)) return;
     const next: CropRect = { ...crop, [key]: Math.round(raw) };
     next.width = clamp(next.width, 1, maxWidth);
@@ -81,6 +83,9 @@ export default function CropDimensions({ crop, maxWidth, maxHeight, onChange }: 
     next.y = clamp(next.y, 0, maxHeight - next.height);
     onChange(next);
   };
+
+  const maxX = Math.max(0, maxWidth - Math.round(crop.width));
+  const maxY = Math.max(0, maxHeight - Math.round(crop.height));
 
   return (
     <Wrapper>
@@ -96,11 +101,11 @@ export default function CropDimensions({ crop, maxWidth, maxHeight, onChange }: 
         </Field>
         <Field>
           {t('x')}
-          <NumberInput type="number" min={0} max={maxWidth - 1} value={Math.round(crop.x)} onChange={handle('x')} />
+          <NumberInput type="number" min={0} max={maxX} value={Math.round(crop.x)} onChange={handle('x')} />
         </Field>
         <Field>
           {t('y')}
-          <NumberInput type="number" min={0} max={maxHeight - 1} value={Math.round(crop.y)} onChange={handle('y')} />
+          <NumberInput type="number" min={0} max={maxY} value={Math.round(crop.y)} onChange={handle('y')} />
         </Field>
       </Grid>
     </Wrapper>

@@ -88,6 +88,13 @@ export default function CropCanvas({
         onChange={(c) => {
           if (c.unit === 'px') {
             onCropChange({ x: c.x, y: c.y, width: c.width, height: c.height });
+          } else {
+            onCropChange({
+              x: (c.x / 100) * imageWidth,
+              y: (c.y / 100) * imageHeight,
+              width: (c.width / 100) * imageWidth,
+              height: (c.height / 100) * imageHeight,
+            });
           }
         }}
         ruleOfThirds
