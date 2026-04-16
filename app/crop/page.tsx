@@ -306,9 +306,7 @@ export default function CropPage() {
     };
   }, []);
 
-  const handleDrop = useCallback(async (files: File[]) => {
-    if (files.length === 0) return;
-    const file = files[0];
+  const handleDrop = useCallback(async (file: File) => {
     setError(null);
 
     try {
@@ -434,7 +432,7 @@ export default function CropPage() {
           </Header>
         </HeaderWrap>
         <EmptyState>
-          <DropZone onFilesSelect={handleDrop} />
+          <DropZone onFileSelect={handleDrop} />
           {error && <ErrorBox>{error}</ErrorBox>}
         </EmptyState>
       </PageContainer>
