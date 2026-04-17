@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
 
-const coreSrc = resolve(root, 'node_modules/@ffmpeg/core/dist/umd');
+const coreSrc = resolve(root, 'node_modules/@ffmpeg/core/dist/esm');
 const ffmpegSrc = resolve(root, 'node_modules/@ffmpeg/ffmpeg/dist/esm');
 const dest = resolve(root, 'public/ffmpeg');
 
