@@ -8,11 +8,12 @@ export async function getFFmpeg(): Promise<FFmpeg> {
   if (loadPromise) return loadPromise;
 
   loadPromise = (async () => {
+    const base = typeof window !== 'undefined' ? window.location.origin : '';
     const ffmpeg = new FFmpeg();
     await ffmpeg.load({
-      coreURL: '/ffmpeg/ffmpeg-core.js',
-      wasmURL: '/ffmpeg/ffmpeg-core.wasm',
-      classWorkerURL: '/ffmpeg/worker.js',
+      coreURL: `${base}/ffmpeg/ffmpeg-core.js`,
+      wasmURL: `${base}/ffmpeg/ffmpeg-core.wasm`,
+      classWorkerURL: `${base}/ffmpeg/worker.js`,
     });
     instance = ffmpeg;
     return ffmpeg;
