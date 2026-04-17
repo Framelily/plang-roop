@@ -7,6 +7,8 @@ import type { GifToWebpOptions, WorkerInbound, WorkerOutbound } from './types';
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
 
+console.info('[gif-to-webp worker] loaded');
+
 function post(message: WorkerOutbound, transfer: Transferable[] = []): void {
   ctx.postMessage(message, transfer);
 }
@@ -38,6 +40,7 @@ async function convert(bytes: ArrayBuffer, options: GifToWebpOptions): Promise<v
   try {
     ffmpeg = await getFFmpeg();
   } catch (err) {
+    console.error('[gif-to-webp worker] ffmpeg load error:', err);
     post({
       type: 'error',
       code: 'load_encoder',
