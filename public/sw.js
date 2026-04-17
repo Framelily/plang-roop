@@ -1,9 +1,10 @@
-const CACHE_NAME = 'plang-roop-v3';
+const CACHE_NAME = 'plang-roop-v4';
 const STATIC_ASSETS = [
   '/',
   '/editor',
   '/batch',
   '/favicon-generator',
+  '/gif-to-webp',
 ];
 
 // Install event - cache static assets

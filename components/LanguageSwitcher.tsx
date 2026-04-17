@@ -43,7 +43,7 @@ export default function LanguageSwitcher() {
   const handleLocaleChange = (newLocale: Locale) => {
     if (newLocale === locale) return;
 
-    // Set the locale cookie
+    // eslint-disable-next-line react-hooks/immutability
     document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=${60 * 60 * 24 * 365}`;
 
     // Refresh the page to apply the new locale

@@ -433,16 +433,19 @@ export default function Home() {
                 <FeatureTitle>{t('featureResize')}</FeatureTitle>
                 <FeatureDesc>{t('featureResizeDesc')}</FeatureDesc>
               </FeatureCard>
-              {/* CONVERT */}
-              <FeatureCard>
+              {/* GIF → WEBP */}
+              <FeatureCard
+                $clickable
+                onClick={() => router.push('/gif-to-webp')}
+              >
                 <FeatureIcon $bgColor="#EDE9FE" $color={colors.secondary}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 12a9 9 0 1 1-9-9" />
-                    <path d="M21 3v9h-9" />
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M7 12h2v4M11 12v4M15 12h2M15 14h2" />
                   </svg>
                 </FeatureIcon>
-                <FeatureTitle>{t('featureConvert')}</FeatureTitle>
-                <FeatureDesc>{t('featureConvertDesc')}</FeatureDesc>
+                <FeatureTitle>{t('featureGifToWebp')}</FeatureTitle>
+                <FeatureDesc>{t('featureGifToWebpDesc')}</FeatureDesc>
               </FeatureCard>
               {/* BATCH */}
               <FeatureCard>

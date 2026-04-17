@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated ffmpeg-core assets copied by scripts/copy-ffmpeg.mjs
+    "public/ffmpeg/**",
   ]),
 ]);
 
