@@ -70,3 +70,23 @@ export const ACCEPTED_FILE_TYPES = {
 };
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+export interface CropRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface Transform {
+  rotate: 0 | 90 | 180 | 270;
+  flipH: boolean;
+  flipV: boolean;
+}
+
+export interface CropOptions {
+  crop: CropRect;
+  transform: Transform;
+  format: ImageFormat;
+  quality: number;
+}

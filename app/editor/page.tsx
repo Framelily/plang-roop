@@ -11,6 +11,20 @@ import { mayContainExif } from '@/lib/image/exif';
 import { formatFileSize, getFormatFromMimeType } from '@/lib/utils';
 import { getImageData, removeImageData, STORAGE_KEYS } from '@/lib/storage';
 import type { ImageFormat, ProcessedImage } from '@/lib/types';
+import PageHeader from '@/components/PageHeader';
+import {
+  PageMain,
+  PreviewArea,
+  SidePanel,
+  SectionCard,
+  PageActions,
+  ActionButton,
+  Spinner,
+} from '@/components/layout';
+import Input from '@/components/ui/Input';
+import Checkbox from '@/components/ui/Checkbox';
+import RadioGroup from '@/components/ui/RadioGroup';
+import Slider from '@/components/ui/Slider';
 
 // Soft UI Evolution Palette
 const colors = {
@@ -42,180 +56,6 @@ const PageContainer = styled.div`
   color: ${colors.text};
 `;
 
-const HeaderWrapper = styled.div`
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  padding: 12px 12px 0;
-
-  @media (min-width: 640px) {
-    padding: 16px 16px 0;
-  }
-`;
-
-const Header = styled.header`
-  background-color: ${colors.bgCard};
-  border: 1px solid ${colors.border};
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  max-width: 72rem;
-  margin: 0 auto;
-`;
-
-const HeaderContent = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
-`;
-
-const HeaderLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
-
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: ${colors.textMuted};
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 0.938rem;
-  transition: all 0.2s;
-  padding: 8px 12px;
-  border-radius: 8px;
-
-  &:hover {
-    color: ${colors.primary};
-    background: ${colors.primaryLight};
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`;
-
-const Divider = styled.div`
-  width: 1px;
-  height: 24px;
-  background-color: ${colors.border};
-
-  @media (max-width: 640px) {
-    display: none;
-  }
-`;
-
-const Title = styled.h1`
-  font-family: var(--font-heading);
-  font-size: 1.125rem;
-  color: ${colors.text};
-  font-weight: 700;
-`;
-
-const HeaderRight = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const ActionButton = styled.button<{ $variant?: 'primary' | 'outline'; $size?: 'sm' | 'md' }>`
-  font-family: var(--font-heading);
-  font-size: ${props => props.$size === 'sm' ? '0.813rem' : '0.875rem'};
-  padding: ${props => props.$size === 'sm' ? '8px 16px' : '10px 20px'};
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 600;
-
-  ${props => props.$variant === 'outline' ? `
-    background-color: transparent;
-    border: 1px solid ${colors.border};
-    color: ${colors.textMuted};
-
-    &:hover:not(:disabled) {
-      border-color: ${colors.primary};
-      color: ${colors.primary};
-      background: ${colors.primaryLight};
-    }
-  ` : `
-    background-color: ${colors.primary};
-    border: 1px solid ${colors.primary};
-    color: white;
-
-    &:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-  `}
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-`;
-
-const Main = styled.main`
-  max-width: 72rem;
-  margin: 0 auto;
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 24px 16px;
-
-  @media (min-width: 1024px) {
-    flex-direction: row;
-  }
-`;
-
-const ControlsSection = styled.div`
-  width: 100%;
-
-  @media (min-width: 1024px) {
-    width: 320px;
-    flex-shrink: 0;
-    order: 2;
-  }
-`;
-
-const Card = styled.div`
-  background-color: ${colors.bgCard};
-  border: 1px solid ${colors.border};
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-  @media (min-width: 640px) {
-    padding: 20px;
-  }
-`;
-
-const SectionTitle = styled.h3`
-  font-family: var(--font-heading);
-  font-size: 0.813rem;
-  color: ${colors.text};
-  font-weight: 700;
-  margin-bottom: 16px;
-`;
-
-const SectionDivider = styled.div`
-  height: 1px;
-  background: ${colors.border};
-  margin: 20px 0;
-`;
-
 const InputGroup = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -225,195 +65,6 @@ const InputGroup = styled.div`
     grid-template-columns: 1fr;
     gap: 16px;
   }
-`;
-
-const InputWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const InputLabel = styled.label`
-  font-family: var(--font-heading);
-  font-size: 0.75rem;
-  color: ${colors.textMuted};
-  font-weight: 600;
-`;
-
-const InputContainer = styled.div`
-  display: flex;
-  align-items: center;
-  background-color: ${colors.bgCard};
-  border: 1px solid ${colors.border};
-  border-radius: 8px;
-  transition: all 0.2s;
-
-  &:focus-within {
-    border-color: ${colors.primary};
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-`;
-
-const StyledInput = styled.input`
-  flex: 1;
-  background: transparent;
-  border: none;
-  padding: 10px 12px;
-  font-family: var(--font-body);
-  font-size: 0.938rem;
-  color: ${colors.text};
-  outline: none;
-  width: 100%;
-
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  &[type=number] {
-    -moz-appearance: textfield;
-  }
-`;
-
-const InputSuffix = styled.span`
-  padding: 0 12px;
-  font-family: var(--font-body);
-  font-size: 0.813rem;
-  color: ${colors.textMuted};
-`;
-
-const CheckboxWrapper = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  padding: 8px 0;
-
-  &:hover span:first-of-type {
-    border-color: ${colors.primary};
-  }
-`;
-
-const CheckboxInput = styled.input`
-  display: none;
-
-  &:checked + span {
-    background-color: ${colors.primary};
-    border-color: ${colors.primary};
-
-    &::after {
-      content: '';
-      display: block;
-      width: 5px;
-      height: 9px;
-      border: solid white;
-      border-width: 0 2px 2px 0;
-      transform: rotate(45deg);
-      margin: 1px auto 0;
-    }
-  }
-`;
-
-const CheckboxBox = styled.span`
-  width: 18px;
-  height: 18px;
-  border: 1.5px solid ${colors.border};
-  border-radius: 4px;
-  background-color: ${colors.bgCard};
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const CheckboxLabel = styled.span`
-  font-family: var(--font-body);
-  font-size: 0.938rem;
-  color: ${colors.text};
-`;
-
-const RadioGroupWrapper = styled.div`
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-`;
-
-const RadioLabel = styled.label<{ $checked: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border: 1px solid ${props => props.$checked ? colors.primary : colors.border};
-  background-color: ${props => props.$checked ? colors.primaryLight : colors.bgCard};
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: var(--font-heading);
-  font-size: 0.813rem;
-  font-weight: 600;
-  color: ${props => props.$checked ? colors.primary : colors.textMuted};
-  border-radius: 8px;
-
-  &:hover {
-    border-color: ${colors.primary};
-    color: ${colors.primary};
-  }
-
-  input {
-    display: none;
-  }
-`;
-
-const SliderWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const SliderContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
-
-const StyledSlider = styled.input`
-  flex: 1;
-  -webkit-appearance: none;
-  height: 6px;
-  background: ${colors.border};
-  border: none;
-  border-radius: 4px;
-  outline: none;
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    background: ${colors.primary};
-    border: 2px solid white;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  }
-
-  &::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    background: ${colors.primary};
-    border: 2px solid white;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  }
-`;
-
-const SliderValue = styled.span`
-  font-family: var(--font-heading);
-  font-size: 0.813rem;
-  color: ${colors.primary};
-  font-weight: 600;
-  min-width: 40px;
-  text-align: right;
 `;
 
 const HelpText = styled.p`
@@ -480,15 +131,17 @@ const SavedValue = styled.dd<{ $positive: boolean }>`
   color: ${props => props.$positive ? colors.success : colors.error};
 `;
 
-const PreviewSection = styled.div`
-  flex: 1;
+const PreviewCard = styled.section`
+  background-color: ${colors.bgCard};
+  border: 1px solid ${colors.border};
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
-  @media (min-width: 1024px) {
-    order: 1;
+  @media (min-width: 640px) {
+    padding: 20px;
   }
 `;
-
-const PreviewCard = styled(Card)``;
 
 const PreviewHeader = styled.div`
   display: flex;
@@ -658,121 +311,6 @@ interface StoredImageInfo {
   originalHeight: number;
   size: number;
   type: string;
-}
-
-// Custom Input Component
-interface CustomInputProps {
-  id: string;
-  type?: string;
-  label: string;
-  suffix?: string;
-  value: number | string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  min?: number;
-  max?: number;
-}
-
-function CustomInput({ id, type = 'text', label, suffix, value, onChange, min, max }: CustomInputProps) {
-  return (
-    <InputWrapper>
-      <InputLabel htmlFor={id}>{label}</InputLabel>
-      <InputContainer>
-        <StyledInput
-          id={id}
-          type={type}
-          value={value}
-          onChange={onChange}
-          min={min}
-          max={max}
-        />
-        {suffix && <InputSuffix>{suffix}</InputSuffix>}
-      </InputContainer>
-    </InputWrapper>
-  );
-}
-
-// Custom Checkbox Component
-interface CustomCheckboxProps {
-  id: string;
-  label: string;
-  checked: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-function CustomCheckbox({ id, label, checked, onChange }: CustomCheckboxProps) {
-  return (
-    <CheckboxWrapper htmlFor={id}>
-      <CheckboxInput
-        type="checkbox"
-        id={id}
-        checked={checked}
-        onChange={onChange}
-      />
-      <CheckboxBox />
-      <CheckboxLabel>{label}</CheckboxLabel>
-    </CheckboxWrapper>
-  );
-}
-
-// Custom RadioGroup Component
-interface RadioOption {
-  value: string;
-  label: string;
-}
-
-interface CustomRadioGroupProps {
-  name: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: RadioOption[];
-}
-
-function CustomRadioGroup({ name, value, onChange, options }: CustomRadioGroupProps) {
-  return (
-    <RadioGroupWrapper>
-      {options.map((option) => (
-        <RadioLabel key={option.value} $checked={value === option.value}>
-          <input
-            type="radio"
-            name={name}
-            value={option.value}
-            checked={value === option.value}
-            onChange={() => onChange(option.value)}
-          />
-          {option.label}
-        </RadioLabel>
-      ))}
-    </RadioGroupWrapper>
-  );
-}
-
-// Custom Slider Component
-interface CustomSliderProps {
-  id: string;
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-function CustomSlider({ id, min, max, step, value, onChange }: CustomSliderProps) {
-  return (
-    <SliderWrapper>
-      <SliderContainer>
-        <StyledSlider
-          type="range"
-          id={id}
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={onChange}
-        />
-        <SliderValue>{value}%</SliderValue>
-      </SliderContainer>
-    </SliderWrapper>
-  );
 }
 
 export default function EditorPage() {
@@ -973,189 +511,13 @@ export default function EditorPage() {
 
   return (
     <PageContainer>
-      <HeaderWrapper>
-        <Header>
-          <HeaderContent>
-            <HeaderLeft>
-              <BackButton onClick={handleBack}>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                <span>{tc('back')}</span>
-              </BackButton>
-              <Divider />
-              <Title>{t('title')}</Title>
-            </HeaderLeft>
-            <HeaderRight>
-              <ActionButton $variant="outline" $size="sm" onClick={handleReset}>
-                {tc('reset')}
-              </ActionButton>
-              <ActionButton $size="sm" onClick={handleDownload} disabled={!processedImage || isPreviewProcessing}>
-                {isPreviewProcessing ? '...' : tc('download')}
-              </ActionButton>
-            </HeaderRight>
-          </HeaderContent>
-        </Header>
-      </HeaderWrapper>
+      <PageHeader
+        title={t('title')}
+        onBack={handleBack}
+      />
 
-      <Main>
-        {/* Controls Section */}
-        <ControlsSection>
-          <Card>
-            {/* Resize Section */}
-            <div>
-              <SectionTitle>{t('resize')}</SectionTitle>
-              <InputGroup>
-                <CustomInput
-                  id="width"
-                  type="number"
-                  label={t('width')}
-                  suffix="px"
-                  value={width || ''}
-                  onChange={(e) => handleWidthChange(Number(e.target.value) || 0)}
-                  min={1}
-                  max={10000}
-                />
-                <CustomInput
-                  id="height"
-                  type="number"
-                  label={t('height')}
-                  suffix="px"
-                  value={height || ''}
-                  onChange={(e) => handleHeightChange(Number(e.target.value) || 0)}
-                  min={1}
-                  max={10000}
-                />
-              </InputGroup>
-              <div style={{ marginTop: '12px' }}>
-                <CustomCheckbox
-                  id="keepRatio"
-                  label={t('keepAspectRatio')}
-                  checked={keepAspectRatio}
-                  onChange={(e) => setKeepAspectRatio(e.target.checked)}
-                />
-              </div>
-            </div>
-
-            <SectionDivider />
-
-            {/* Format Section */}
-            <div>
-              <SectionTitle>{t('outputFormat')}</SectionTitle>
-              <CustomRadioGroup
-                name="format"
-                value={format}
-                onChange={(value) => setFormat(value as ImageFormat)}
-                options={[
-                  { value: 'jpeg', label: 'JPG' },
-                  { value: 'png', label: 'PNG' },
-                  { value: 'webp', label: 'WebP' },
-                ]}
-              />
-            </div>
-
-            <SectionDivider />
-
-            {/* Quality Section */}
-            <div>
-              <SectionTitle>{t('quality')}</SectionTitle>
-              <CustomSlider
-                id="quality"
-                min={10}
-                max={100}
-                step={5}
-                value={quality}
-                onChange={(e) => setQuality(Number(e.target.value))}
-              />
-              <HelpText>
-                {t('qualityHelp')}
-              </HelpText>
-            </div>
-
-            {/* EXIF Section - only show for JPEG */}
-            {imageInfo && mayContainExif(imageInfo.type) && (
-              <>
-                <SectionDivider />
-                <div>
-                  <SectionTitle>{t('privacy')}</SectionTitle>
-                  <CustomCheckbox
-                    id="stripExif"
-                    label={t('stripExif')}
-                    checked={stripExif}
-                    onChange={(e) => setStripExif(e.target.checked)}
-                  />
-                  <HelpText>
-                    {t('stripExifHelp')}
-                  </HelpText>
-                </div>
-              </>
-            )}
-
-            <SectionDivider />
-
-            {/* Info Section */}
-            <InfoGrid>
-              <InfoBlock>
-                <InfoTitle>{t('original')}</InfoTitle>
-                <InfoList>
-                  <InfoRow>
-                    <InfoLabel>{t('dim')}</InfoLabel>
-                    <InfoValue>
-                      {imageInfo.originalWidth}x{imageInfo.originalHeight}
-                    </InfoValue>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>{t('size')}</InfoLabel>
-                    <InfoValue>
-                      {formatFileSize(imageInfo.size)}
-                    </InfoValue>
-                  </InfoRow>
-                </InfoList>
-              </InfoBlock>
-
-              {/* Processed Info */}
-              {processedImage && (
-                <InfoBlock>
-                  <InfoTitle>{t('processed')}</InfoTitle>
-                  <InfoList>
-                    <InfoRow>
-                      <InfoLabel>{t('dim')}</InfoLabel>
-                      <InfoValue>
-                        {processedImage.width}x{processedImage.height}
-                      </InfoValue>
-                    </InfoRow>
-                    <InfoRow>
-                      <InfoLabel>{t('size')}</InfoLabel>
-                      <InfoValue>
-                        {formatFileSize(processedImage.size)}
-                      </InfoValue>
-                    </InfoRow>
-                    <InfoRow>
-                      <InfoLabel>{t('saved')}</InfoLabel>
-                      <SavedValue $positive={processedImage.size < imageInfo.size}>
-                        {processedImage.size < imageInfo.size
-                          ? `-${Math.round(((imageInfo.size - processedImage.size) / imageInfo.size) * 100)}%`
-                          : `+${Math.round(((processedImage.size - imageInfo.size) / imageInfo.size) * 100)}%`}
-                      </SavedValue>
-                    </InfoRow>
-                  </InfoList>
-                </InfoBlock>
-              )}
-            </InfoGrid>
-          </Card>
-        </ControlsSection>
-
-        {/* Preview Section */}
-        <PreviewSection>
+      <PageMain>
+        <PreviewArea>
           <PreviewCard>
             <PreviewHeader>
               <PreviewTitle>
@@ -1182,8 +544,149 @@ export default function EditorPage() {
               {imageInfo.name}
             </FileName>
           </PreviewCard>
-        </PreviewSection>
-      </Main>
+
+          <InfoGrid>
+            <InfoBlock>
+              <InfoTitle>{t('original')}</InfoTitle>
+              <InfoList>
+                <InfoRow>
+                  <InfoLabel>{t('dim')}</InfoLabel>
+                  <InfoValue>
+                    {imageInfo.originalWidth}x{imageInfo.originalHeight}
+                  </InfoValue>
+                </InfoRow>
+                <InfoRow>
+                  <InfoLabel>{t('size')}</InfoLabel>
+                  <InfoValue>
+                    {formatFileSize(imageInfo.size)}
+                  </InfoValue>
+                </InfoRow>
+              </InfoList>
+            </InfoBlock>
+
+            {/* Processed Info */}
+            {processedImage && (
+              <InfoBlock>
+                <InfoTitle>{t('processed')}</InfoTitle>
+                <InfoList>
+                  <InfoRow>
+                    <InfoLabel>{t('dim')}</InfoLabel>
+                    <InfoValue>
+                      {processedImage.width}x{processedImage.height}
+                    </InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>{t('size')}</InfoLabel>
+                    <InfoValue>
+                      {formatFileSize(processedImage.size)}
+                    </InfoValue>
+                  </InfoRow>
+                  <InfoRow>
+                    <InfoLabel>{t('saved')}</InfoLabel>
+                    <SavedValue $positive={processedImage.size < imageInfo.size}>
+                      {processedImage.size < imageInfo.size
+                        ? `-${Math.round(((imageInfo.size - processedImage.size) / imageInfo.size) * 100)}%`
+                        : `+${Math.round(((processedImage.size - imageInfo.size) / imageInfo.size) * 100)}%`}
+                    </SavedValue>
+                  </InfoRow>
+                </InfoList>
+              </InfoBlock>
+            )}
+          </InfoGrid>
+        </PreviewArea>
+
+        <SidePanel>
+          <SectionCard title={t('resize')}>
+            <InputGroup>
+              <Input
+                id="width"
+                type="number"
+                label={t('width')}
+                suffix="px"
+                value={width || ''}
+                onChange={(e) => handleWidthChange(Number(e.target.value) || 0)}
+                min={1}
+                max={10000}
+              />
+              <Input
+                id="height"
+                type="number"
+                label={t('height')}
+                suffix="px"
+                value={height || ''}
+                onChange={(e) => handleHeightChange(Number(e.target.value) || 0)}
+                min={1}
+                max={10000}
+              />
+            </InputGroup>
+            <div style={{ marginTop: '12px' }}>
+              <Checkbox
+                id="keepRatio"
+                label={t('keepAspectRatio')}
+                checked={keepAspectRatio}
+                onChange={(e) => setKeepAspectRatio(e.target.checked)}
+              />
+            </div>
+          </SectionCard>
+
+          <SectionCard title={t('outputFormat')}>
+            <RadioGroup
+              name="format"
+              value={format}
+              onChange={(value) => setFormat(value as ImageFormat)}
+              options={[
+                { value: 'jpeg', label: 'JPG' },
+                { value: 'png', label: 'PNG' },
+                { value: 'webp', label: 'WebP' },
+              ]}
+            />
+          </SectionCard>
+
+          <SectionCard title={t('quality')}>
+            <Slider
+              id="quality"
+              min={10}
+              max={100}
+              step={5}
+              value={quality}
+              onChange={(e) => setQuality(Number(e.target.value))}
+            />
+            <HelpText>{t('qualityHelp')}</HelpText>
+          </SectionCard>
+
+          {imageInfo && mayContainExif(imageInfo.type) && (
+            <SectionCard title={t('privacy')}>
+              <Checkbox
+                id="stripExif"
+                label={t('stripExif')}
+                checked={stripExif}
+                onChange={(e) => setStripExif(e.target.checked)}
+              />
+              <HelpText>{t('stripExifHelp')}</HelpText>
+            </SectionCard>
+          )}
+
+          <PageActions>
+            <ActionButton $variant="outline" onClick={handleReset}>
+              {tc('reset')}
+            </ActionButton>
+            <ActionButton
+              $variant="primary"
+              onClick={handleDownload}
+              disabled={!processedImage || isPreviewProcessing}
+            >
+              {isPreviewProcessing ? (
+                <>
+                  <Spinner />
+                  {tc('processing')}
+                </>
+              ) : (
+                tc('download')
+              )}
+            </ActionButton>
+          </PageActions>
+        </SidePanel>
+      </PageMain>
 
       {downloadComplete && (
         <SuccessOverlay>

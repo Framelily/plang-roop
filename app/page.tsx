@@ -175,10 +175,6 @@ const FeaturesGrid = styled.div`
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   margin-top: 2rem;
-
-  @media (min-width: 640px) {
-    grid-template-columns: repeat(4, 1fr);
-  }
 `;
 
 const FeatureCard = styled.div<{ $clickable?: boolean }>`
@@ -421,19 +417,19 @@ export default function Home() {
             {error && <ErrorMessage>{error}</ErrorMessage>}
 
             <FeaturesGrid>
-              {/* RESIZE */}
-              <FeatureCard>
+              <FeatureCard
+                $clickable
+                onClick={() => router.push('/crop')}
+              >
                 <FeatureIcon $bgColor={colors.primaryLight} $color={colors.primary}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M14 10h4v4" />
-                    <path d="M10 14H6v-4" />
+                    <path d="M6 2v14a2 2 0 0 0 2 2h14" />
+                    <path d="M18 22V8a2 2 0 0 0-2-2H2" />
                   </svg>
                 </FeatureIcon>
-                <FeatureTitle>{t('featureResize')}</FeatureTitle>
-                <FeatureDesc>{t('featureResizeDesc')}</FeatureDesc>
+                <FeatureTitle>{t('featureCrop')}</FeatureTitle>
+                <FeatureDesc>{t('featureCropDesc')}</FeatureDesc>
               </FeatureCard>
-              {/* GIF → WEBP */}
               <FeatureCard
                 $clickable
                 onClick={() => router.push('/gif-to-webp')}
@@ -446,17 +442,6 @@ export default function Home() {
                 </FeatureIcon>
                 <FeatureTitle>{t('featureGifToWebp')}</FeatureTitle>
                 <FeatureDesc>{t('featureGifToWebpDesc')}</FeatureDesc>
-              </FeatureCard>
-              {/* BATCH */}
-              <FeatureCard>
-                <FeatureIcon $bgColor="#DCFCE7" $color={colors.success}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="8" y="8" width="13" height="13" rx="1" />
-                    <rect x="3" y="3" width="13" height="13" rx="1" />
-                  </svg>
-                </FeatureIcon>
-                <FeatureTitle>{t('featureBatch')}</FeatureTitle>
-                <FeatureDesc>{t('featureBatchDesc')}</FeatureDesc>
               </FeatureCard>
               {/* FAVICON */}
               <FeatureCard
