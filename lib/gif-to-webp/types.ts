@@ -12,14 +12,6 @@ export const DEFAULT_OPTIONS: GifToWebpOptions = {
 
 export const MAX_GIF_SIZE = 20 * 1024 * 1024;
 
-export type WorkerInbound =
-  | { type: 'convert'; bytes: ArrayBuffer; options: GifToWebpOptions };
-
-export type WorkerOutbound =
-  | { type: 'progress'; ratio: number }
-  | { type: 'done'; buffer: ArrayBuffer }
-  | { type: 'error'; code: ErrorCode; message: string };
-
 export type ErrorCode =
   | 'load_encoder'
   | 'convert_failed'
